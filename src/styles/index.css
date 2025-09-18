@@ -1,0 +1,92 @@
+:root {
+    --color-theme: #F07F81;
+    --color-dark-primary: #1e2326;
+    --color-dark-secondary: #252b2f;
+    --color-dark-tertiary: #31383d;
+    --color-light-primary: #F0F0F0;
+    --color-light-secondary: #b5b5b5;
+    --font-primary: 'Roboto Mono', monospace;
+    --font-secondary: 'Ubuntu', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--color-light-primary);
+    min-width: 100vw;
+    min-height: 100vh;
+    color: var(--color-dark-primary);
+}
+
+#root {
+    min-width: 100vw;
+    min-height: 100vh;
+    display: flex;
+}
+
+
+body::-webkit-scrollbar {
+    width: 3px;
+}
+
+body::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background-color: var(--color-theme);
+}
+
+.flex {
+    display: flex;
+}
+
+.flexCenter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullBordered {
+    border-radius: 50%;
+}
+
+.abs {
+    position: absolute;
+    inset: 0;
+}
+
+.rel {
+    position: relative;
+}
+
+.unobservable {
+    pointer-events: none;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.transformToCenter {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%)
+}
+
+.transition {
+    transition: 500ms;
+}
+
+.maxContent {
+    width: max-content;
+    height: max-content;
+}
+
+.origin {
+    width: 0;
+    height: 0;
+}
+
+
