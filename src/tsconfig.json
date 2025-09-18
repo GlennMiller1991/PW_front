@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    // emit
+    "target": "esnext",
+    "noEmitOnError": true,
+
+    // syntax
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["./*"],
+      "@lib/*": ["../lib/*"]
+    }
+  }
+}
