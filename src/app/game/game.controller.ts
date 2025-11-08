@@ -45,6 +45,10 @@ export class GameController {
     constructor() {
     }
 
+    changeBitmap(bitmap: ArrayBuffer) {
+        this.texture = updateOrCreateTexture(this.canvas._ctx, bitmap, this.field, this.texture);
+    }
+
     async onDomMounted(canvas: HTMLCanvasElement) {
         let {data} = await GET<IFieldSizesResponse>(ENDPOINTS.sizes);
         if (!data) return;
@@ -197,8 +201,14 @@ export class GameStatusChanging {
             this.status?.dispose();
             this.status = nextRole;
 
-            await this.status.do();
-        } while(true);
+            try {
+                await this.status.do();
+            } catch {
+                this.status.dispose();
+                this.status = null as any;
+            }
+
+        } while (true);
 
     }
 }

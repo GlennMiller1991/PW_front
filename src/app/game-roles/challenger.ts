@@ -1,72 +1,70 @@
 import {GameController} from "@src/app/game/game.controller";
 import {MessageParser} from "@src/app/game/ws/message-parser";
 import {DependencyStream} from "@fbltd/async";
-import {IMessage, IPixelSettingMessage} from "@src/app/game/ws/contracts";
 import {IUnhandledMessages} from "@src/app/game/ws/ws.controller";
+import {BaseRole} from "@src/app/game-roles/base.role";
+import {processPixelSettingMessage} from "@src/app/game-roles/utils";
 
-export class Challenger {
-    stream: DependencyStream<IUnhandledMessages>;
+export class Challenger extends BaseRole {
+    declare _stream: DependencyStream<IUnhandledMessages>;
+    private _stableVersion: number;
 
-    constructor(private gameController: GameController) {
-        this.stream = new DependencyStream(this.gameController.wsConnection.message);
+    constructor(gameController: GameController) {
+        super(gameController);
+        this._stream = new DependencyStream(this.gameController.wsConnection.message);
+        this._stableVersion = -1;
     }
 
     async do() {
         await this.gameController.wsConnection.init();
-        const completion = this.onMessage();
-        // const maybeBitmap = (await this.gameController.httpPixelSource.forceGet())!;
-        return completion;
+        await this.updateBitmap();
+
+        const _ = this.onMessage();
+
+        return super.do();
     }
 
-    get gl() {
-        return this.gameController.canvas.ctx;
+    async updateBitmap() {
+        const buffer = (await this.gameController.httpPixelSource.forceGet())!;
+        this._stableVersion = new Int32Array(buffer.slice(0, 4))[0];
+        this.gameController.changeBitmap(buffer.slice(4));
+        this.gameController.planDraw();
+
+        return this._stableVersion;
     }
 
     async onMessage() {
         outer:
-        for await (let {unhandledMessages} of this.stream) {
-            for (let raw of unhandledMessages) {
-                let msg: IMessage<any, any>;
-                try {
-                    msg = MessageParser.parse(raw);
-                } catch(err) {
-                    console.warn("Message parse error");
-                    continue;
-                }
+            for await (let {unhandledMessages} of this._stream) {
+                for (let msg of unhandledMessages) {
+                    if (MessageParser.isPixelSettingMessage(msg)) {
 
-                if (MessageParser.isPixelSettingMessage(msg)) {
-                    processPixelSettingMessage(this.gl, msg);
+                        if (msg.data.data.version > this._stableVersion) {
+                            await this.updateBitmap();
+                            if (msg.data.data.version > this._stableVersion) {
+                                this._completion.reject(null as any);
+                                break outer;
+                            }
+                        }
 
-                    this.gameController.planDraw();
-                    continue;
-                }
-                if (MessageParser.isStatusChangeMessage(msg)) {
-                    break outer;
+                        processPixelSettingMessage(this.gameController.canvas.ctx, msg);
+
+                        this.gameController.planDraw();
+                        continue;
+                    }
+                    if (MessageParser.isStatusChangeMessage(msg)) {
+                        this._completion.resolve();
+                    }
                 }
             }
+
+
+        if (this._completion.isPending) {
+            this._completion.reject(null as any);
         }
-    }
 
-    dispose() {
-        this.stream.dispose();
-    }
 
+    }
 
 }
 
-function processPixelSettingMessage(gl: WebGL2RenderingContext, newMsg: IPixelSettingMessage) {
-    for (let [version, x, y, r, g, b] of newMsg.data.data) {
-        const data = new Uint8Array([r, g, b]);
-        gl.texSubImage2D(
-            gl.TEXTURE_2D,
-            0,
-            x,
-            y,
-            1,
-            1,
-            gl.RGB,
-            gl.UNSIGNED_BYTE,
-            data
-        );
-    }
-}

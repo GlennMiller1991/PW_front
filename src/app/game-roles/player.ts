@@ -1,19 +1,22 @@
 import {GameController} from "@src/app/game/game.controller";
 import {MessageParser} from "@src/app/game/ws/message-parser";
-import {DependencyStream} from "@fbltd/async";
+import {DependencyStream, PromiseConfiguration} from "@fbltd/async";
 import {IUnhandledMessages} from "@src/app/game/ws/ws.controller";
-import {IMessage} from "@src/app/game/ws/contracts";
+import {BaseRole} from "@src/app/game-roles/base.role";
+import {processPixelSettingMessage} from "@src/app/game-roles/utils";
 
-export class Player {
-    stream: DependencyStream<IUnhandledMessages>;
+export class Player extends BaseRole {
+    declare _stream: DependencyStream<IUnhandledMessages>;
 
-    constructor(private gameController: GameController) {
-        this.stream = new DependencyStream(this.gameController.wsConnection.message);
+    constructor(gameController: GameController) {
+        super(gameController);
+        this._stream = new DependencyStream(this.gameController.wsConnection.message);
     }
 
     async do() {
         this.gameController.clicker.init();
-        return this.onMessage();
+        const _ = this.onMessage();
+        return super.do();
     }
 
     get gl() {
@@ -21,42 +24,20 @@ export class Player {
     }
 
     async onMessage() {
-        for await (let {unhandledMessages} of this.stream) {
-            for (let raw of unhandledMessages) {
-                let msg: IMessage<any, any>;
-                try {
-                    msg = MessageParser.parse(raw);
-                } catch (err) {
-                    console.log('msg parse error');
-                    continue;
-                }
-
+        for await (let {unhandledMessages} of this._stream) {
+            for (let msg of unhandledMessages) {
                 if (MessageParser.isPixelSettingMessage(msg)) {
-                    for (let [version, x, y, r, g, b] of msg.data.data) {
-                        const data = new Uint8Array([r, g, b]);
-                        this.gl.texSubImage2D(
-                            this.gl.TEXTURE_2D,
-                            0,
-                            x,
-                            y,
-                            1,
-                            1,
-                            this.gl.RGB,
-                            this.gl.UNSIGNED_BYTE,
-                            data
-                        );
-                    }
+                    processPixelSettingMessage(this.gl, msg)
 
                     this.gameController.planDraw();
+                    continue;
                 }
 
             }
         }
-    }
 
-    dispose() {
-        this.gameController.clicker.dispose();
-        this.gameController.wsConnection.dispose();
-        this.stream.dispose();
+        if (this._completion.isPending) {
+            this._completion.reject(null as any);
+        }
     }
 }

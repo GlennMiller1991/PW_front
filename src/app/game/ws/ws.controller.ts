@@ -1,62 +1,20 @@
 import {ENDPOINTS} from "@src/request/constants";
 import {Dependency, PromiseConfiguration} from "@fbltd/async";
+import {MessageParser} from "@src/app/game/ws/message-parser";
+import {IMessage} from "@src/app/game/ws/contracts";
+import {Queue} from "@src/app/game/ws/queue";
 
 export interface IUnhandledMessages {
-    unhandledMessages: Queue<ArrayBuffer>,
-}
-
-type IQueueEntry<T> = {
-    next?: IQueueEntry<T>;
-    item: T;
-} | undefined;
-
-export class Queue<T> {
-    first: IQueueEntry<T>;
-    last: IQueueEntry<T>;
-
-    dequeue(): T | undefined {
-        const ret = this.first;
-        if (!ret) return undefined;
-
-        this.first = ret.next;
-        if (!this.first) {
-            this.last = undefined;
-        }
-        return ret.item ;
-    }
-
-    enqueue(item: T) {
-        const e: NonNullable<typeof this.first> = {item};
-        if (this.last) {
-            this.last.next = e;
-        } else {
-            this.first = e;
-        }
-        this.last = e;
-    }
-
-    [Symbol.iterator]() {
-        return {
-            next: (): {done: true} | {done: false, value: T} => {
-                const n = this.dequeue();
-                if (!n) return {done: true};
-
-                return {done: false, value: n};
-            }
-        }
-    }
-
-
-
+    unhandledMessages: Queue<IMessage<any, any>>,
 }
 
 export class WsConnection {
     private connection: WebSocket;
-    private unhandledMessages: Queue<ArrayBuffer> = new Queue();
+    private unhandledMessages: Queue<IMessage<any, any>> = new Queue();
 
     message = new Dependency<IUnhandledMessages>(null as any);
 
-    init() {
+    init(): Promise<void> {
         this.connection = new WebSocket(ENDPOINTS.wsUpgrade);
 
         const promiseConf = new PromiseConfiguration<void>();
@@ -68,27 +26,35 @@ export class WsConnection {
     onOpen = (_ => {
         this.connection.addEventListener('message', this.onMessage);
         this.connection.addEventListener('close', this.onClose);
+
+        this.connection.removeEventListener('open', this.onOpen);
         this.onOpen.resolve?.();
     }) as { (event: MessageEvent): void; resolve: Function }
 
     onMessage = async (message: MessageEvent) => {
         const data = message.data as Blob;
-        this.unhandledMessages.enqueue(await data.arrayBuffer());
+        try {
+            const msg = MessageParser.parse(await data.arrayBuffer());
+            this.unhandledMessages.enqueue(msg);
+            this.message.value = {
+                unhandledMessages: this.unhandledMessages,
+            };
 
-        this.message.value = {
-            unhandledMessages: this.unhandledMessages,
-        };
+        } catch {
+            console.warn("Message parse error");
+        }
 
     }
 
-    onClose = (event: MessageEvent) => {
+    onClose = () => {
         this.connection.removeEventListener('message', this.onMessage);
         this.connection.removeEventListener('close', this.onClose);
+        this.connection.removeEventListener('open', this.onOpen);
         this.message.dispose();
     }
 
     dispose() {
         this.connection.close();
-        // this.onClose();
+        this.onClose();
     }
 }

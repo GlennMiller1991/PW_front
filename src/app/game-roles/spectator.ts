@@ -1,27 +1,25 @@
 import {GameController} from "@src/app/game/game.controller";
-import {updateOrCreateTexture} from "@src/app/game/utils";
+import {DependencyStream} from "@fbltd/async";
+import {BaseRole} from "@src/app/game-roles/base.role";
 
-export class Spectator {
+export class Spectator extends BaseRole {
+    declare _stream: DependencyStream<ArrayBuffer>;
 
-    constructor(private gameController: GameController) {
+    constructor(gameController: GameController) {
+        super(gameController);
+        this._stream = new DependencyStream(gameController.httpPixelSource.buffer);
     }
 
-    get gl() {
-        return this.gameController.canvas.ctx;
-    }
-
-    do() {
+    async do() {
         this.gameController.httpPixelSource.init();
+        const _ = this.onBufferChange();
 
-        return this.onBufferChange();
+        return super.do();
     }
 
     async onBufferChange() {
-        for await (let buffer of this.gameController.httpPixelSource.buffer) {
-            const version = new Int32Array(buffer.slice(0, 4))[0];
-            console.log('version', version);
-            buffer = buffer.slice(4);
-            this.gameController.texture = updateOrCreateTexture(this.gl, buffer, this.gameController.field, this.gameController.texture);
+        for await (let buffer of this._stream) {
+            this.gameController.changeBitmap(buffer.slice(4));
 
             this.gameController.planDraw();
         }
@@ -29,6 +27,11 @@ export class Spectator {
 
     dispose() {
         this.gameController.httpPixelSource.dispose();
+
+        super.dispose();
+    }
+
+    complete() {
+        this._completion.resolve();
     }
 }
-

@@ -6,6 +6,7 @@ import {TopPanelView} from "@src/app/top-panel/top-panel.view";
 import {AppContext} from "@src/app/app.context";
 import {GameView} from "@src/app/game/game.view";
 import {GameController, GameStatusChanging} from "@src/app/game/game.controller";
+import {Spectator} from "@src/app/game-roles/spectator";
 
 export const App = observer(() => {
     const [controller] = useState(() => new AppController());
@@ -33,7 +34,7 @@ export const AppContentView: FC = observer(() => {
             <TopPanelView>
                 {
                     gameStatusCont.isSpectator &&
-                    <SpectatorTopMenu onProceed={() => gameStatusCont.status.dispose()}/>
+                    <SpectatorTopMenu onProceed={() => (gameStatusCont.status as Spectator).complete()}/>
                 }
             </TopPanelView>
             <GameView controller={gameCont}/>

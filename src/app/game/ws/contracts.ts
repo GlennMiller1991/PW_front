@@ -26,7 +26,10 @@ export type IPixelSettingMessage = IMessage<
     MessageRoom.Game,
     IGameMessage<
         GameMessageType.PixelSetting,
-        // version, x, y, r, g, b
-        Array<[number, number, number, number, number, number]>
+        {
+            version: number,
+            // version, x, y, r, g, b
+            pixels: Array<[number, number, number, number, number, number]>
+        }
     >
 >

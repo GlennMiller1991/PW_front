@@ -16,7 +16,7 @@ export class MessageParser {
         let uint8 = new Uint8Array(buffer);
         int = uint8[0];
 
-        switch(int) {
+        switch (int) {
             case MessageRoom.Game:
                 const room = int as MessageRoom;
                 buffer = raw.slice(1, 2);
@@ -28,7 +28,7 @@ export class MessageParser {
                         type
                     }
                 };
-                switch(type) {
+                switch (type) {
                     case GameMessageType.StatusChange:
                         return msg;
                     case GameMessageType.PixelSetting:
@@ -36,12 +36,19 @@ export class MessageParser {
                         const arrSize = 6;
                         const intSize = 4;
                         const sep = arrSize * intSize;
-                        let arr: Array<[number, number, number, number, number, number]> = []
+                        let intArr: [number, number, number, number, number, number];
+                        let pixels: Array<typeof intArr> = [];
+                        let version = 0;
                         for (let i = 2; i < l; i += sep) {
                             buffer = raw.slice(i, i + sep);
-                            arr.push(Array.from(new Int32Array(buffer)) as any)
+                            intArr = Array.from(new Int32Array(buffer)) as typeof intArr;
+                            version = intArr[0];
+                            pixels.push(intArr)
                         }
-                        (msg as IPixelSettingMessage).data.data = arr;
+                        (msg as IPixelSettingMessage).data.data = {
+                            version,
+                            pixels,
+                        };
 
                         break;
 
@@ -62,6 +69,6 @@ export class MessageParser {
     }
 
     static isPixelSettingMessage(msg: IMessage<any, any>): msg is IPixelSettingMessage {
-        return this.isGameMessage(msg) &&  msg.data?.type === GameMessageType.PixelSetting;
+        return this.isGameMessage(msg) && msg.data?.type === GameMessageType.PixelSetting;
     }
 }
