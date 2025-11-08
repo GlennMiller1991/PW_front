@@ -8,10 +8,20 @@ export const devServer: DevServerConfiguration = {
     },
     proxy: [
         {
-            context: ['/api/v1'],
-            target: 'http://localhost:5000',
+            context: ['/api/ws/upgrade'],
+            target: 'ws://localhost:8080',
+            secure: false,
+            ws: true,
+        },
+        {
+            context: ['/api'],
+            target: 'http://localhost:8080',
             secure: false,
         }
     ],
-    port: 5001,
+    client: {
+        reconnect: false,
+    },
+    allowedHosts: ["xn--b1add.xn----7sbanedmtdn2babzy.xn--p1ai"],
+    port: 5000,
 };

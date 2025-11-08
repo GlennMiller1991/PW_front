@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": false,
   "dependencies": {
+    "@fbltd/async": "^1.0.36",
+    "@fbltd/google-auth": "^1.0.15",
     "@fbltd/math": "^1.x.x",
     "mobx-react-lite": "^4.x.x",
     "react": "^19.x.x",
@@ -21,6 +23,7 @@
     "html-webpack-plugin": "^5.x.x",
     "http-server": "^14.1.1",
     "mini-css-extract-plugin": "^2.9.3",
+    "raw-loader": "^4.0.2",
     "react-icons": "^5.5.0",
     "sass": "^1.x.x",
     "sass-loader": "^16.x.x",

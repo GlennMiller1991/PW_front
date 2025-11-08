@@ -5,6 +5,7 @@
     "noEmitOnError": true,
 
     // syntax
+    "noImplicitAny": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
     "module": "esnext",

@@ -22,6 +22,9 @@ export const DevelopmentConfig: Configuration = {
         getDotenvPlugin('development'),
         getNodeModuleReplacementPlugin(),
     ],
+    infrastructureLogging: {
+        debug: [name => name.includes('webpack-dev-server')],
+    },
     devServer,
     module: {
         rules: [
@@ -41,6 +44,10 @@ export const DevelopmentConfig: Configuration = {
             {
                 test: /\.(png|webp)/,
                 type: 'asset/resource'
+            },
+            {
+                test: /\.(glsl)/,
+                use: 'raw-loader',
             }
         ]
     }
