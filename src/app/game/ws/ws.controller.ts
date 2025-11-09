@@ -10,13 +10,14 @@ export interface IUnhandledMessages {
 
 export class WsConnection {
     private connection: WebSocket;
-    private unhandledMessages: Queue<IMessage<any, any>> = new Queue();
+    private unhandledMessages: Queue<IMessage<any, any>>;
 
-    message = new Dependency<IUnhandledMessages>(null as any);
+    message : Dependency<IUnhandledMessages>;
 
     init(): Promise<void> {
         this.connection = new WebSocket(ENDPOINTS.wsUpgrade);
-
+        this.unhandledMessages = new Queue();
+        this.message = new Dependency(null as any);
         const promiseConf = new PromiseConfiguration<void>();
         this.onOpen.resolve = promiseConf.resolve;
         this.connection.addEventListener('open', this.onOpen);
@@ -51,6 +52,9 @@ export class WsConnection {
         this.connection.removeEventListener('close', this.onClose);
         this.connection.removeEventListener('open', this.onOpen);
         this.message.dispose();
+        this.connection = null as any;
+        this.unhandledMessages.dispose();
+        this.unhandledMessages = null as any;
     }
 
     dispose() {

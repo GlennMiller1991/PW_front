@@ -1,6 +1,6 @@
 import {GameController} from "@src/app/game/game.controller";
 import {MessageParser} from "@src/app/game/ws/message-parser";
-import {DependencyStream, PromiseConfiguration} from "@fbltd/async";
+import {DependencyStream} from "@fbltd/async";
 import {IUnhandledMessages} from "@src/app/game/ws/ws.controller";
 import {BaseRole} from "@src/app/game-roles/base.role";
 import {processPixelSettingMessage} from "@src/app/game-roles/utils";
@@ -10,11 +10,12 @@ export class Player extends BaseRole {
 
     constructor(gameController: GameController) {
         super(gameController);
-        this._stream = new DependencyStream(this.gameController.wsConnection.message);
     }
 
     async do() {
         this.gameController.clicker.init();
+        this._stream = new DependencyStream(this.gameController.wsConnection.message);
+
         const _ = this.onMessage();
         return super.do();
     }
@@ -39,5 +40,10 @@ export class Player extends BaseRole {
         if (this._completion.isPending) {
             this._completion.reject(null as any);
         }
+    }
+
+    dispose() {
+        this.gameController.clicker.dispose();
+        super.dispose();
     }
 }

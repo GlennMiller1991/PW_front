@@ -39,5 +39,9 @@ export class Queue<T> {
         }
     }
 
+    dispose() {
+        this.first = this.last = undefined;
+    }
+
 
 }

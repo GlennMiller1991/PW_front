@@ -7,9 +7,6 @@ export class HttpPixelSource {
     abortController?: AbortController;
     buffer = new Dependency<ArrayBuffer>(null as any);
 
-    constructor() {
-    }
-
     init() {
         this.intervalId = setInterval(this.onCooldown, 5000) as any;
     }
@@ -20,12 +17,14 @@ export class HttpPixelSource {
     }
 
     forceGet = async () => {
+        this.abortController?.abort();
+
         this.abortController = new AbortController();
         const signal = this.abortController.signal;
         let bitmapResponse = await GET<ArrayBuffer>(ENDPOINTS.gameBitmap, {signal});
+
         this.abortController = undefined;
 
-        if (!bitmapResponse.data) return;
         return bitmapResponse.data;
     }
 
@@ -36,3 +35,4 @@ export class HttpPixelSource {
         this.buffer.dispose();
     }
 }
+
