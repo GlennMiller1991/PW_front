@@ -3,7 +3,6 @@ import {MessageParser} from "@src/app/game/ws/message-parser";
 import {DependencyStream} from "@fbltd/async";
 import {IUnhandledMessages} from "@src/app/game/ws/ws.controller";
 import {BaseRole} from "@src/app/game-roles/base.role";
-import {processPixelSettingMessage} from "@src/app/game-roles/utils";
 
 export class Player extends BaseRole {
     declare _stream: DependencyStream<IUnhandledMessages>;
@@ -27,11 +26,9 @@ export class Player extends BaseRole {
     async onMessage() {
         for await (let {unhandledMessages} of this._stream) {
             for (let msg of unhandledMessages) {
-                if (MessageParser.isPixelSettingMessage(msg)) {
-                    processPixelSettingMessage(this.gl, msg)
 
-                    this.gameController.planDraw();
-                    continue;
+                if (MessageParser.isPixelSettingMessage(msg)) {
+                    this.gameController.changeBitmapPart(msg.data.data.pixels.map((pixels) => pixels.slice(1) as any))
                 }
 
             }

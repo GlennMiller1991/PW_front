@@ -4,7 +4,8 @@ export enum MessageRoom {
 
 export enum GameMessageType {
     StatusChange = 1,
-    PixelSetting  = 2,
+    PixelSetting = 2,
+    BitmapSetting = 3,
 }
 
 export type IMessage<TRoom extends MessageRoom = MessageRoom, T = never> = {
@@ -32,4 +33,13 @@ export type IPixelSettingMessage = IMessage<
             pixels: Array<[number, number, number, number, number, number]>
         }
     >
+>
+
+export type IBitmapSettingMessage = IMessage<
+    MessageRoom.Game,
+    IGameMessage<GameMessageType.BitmapSetting,
+        {
+            version: number,
+            bitmap: ArrayBuffer,
+        }>
 >

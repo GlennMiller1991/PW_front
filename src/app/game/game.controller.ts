@@ -18,6 +18,7 @@ import {HttpPixelSource} from "@src/app/game/httpPixelSource";
 import {Spectator} from "@src/app/game-roles/spectator";
 import {Challenger} from "@src/app/game-roles/challenger";
 import {Player} from "@src/app/game-roles/player";
+import {IPixelSettingMessage} from "@src/app/game/ws/contracts";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -47,7 +48,31 @@ export class GameController {
 
     changeBitmap(bitmap: ArrayBuffer) {
         this.texture = updateOrCreateTexture(this.canvas._ctx, bitmap, this.field, this.texture);
+        this.planDraw();
     }
+
+    changeBitmapPart(pixels: Array<[number, number, number, number, number]>) {
+        const gl = this.canvas._ctx;
+
+        for (let [x, y, r, g, b] of pixels) {
+            const data = new Uint8Array([r, g, b]);
+            gl.texSubImage2D(
+                gl.TEXTURE_2D,
+                0,
+                x,
+                y,
+                1,
+                1,
+                gl.RGB,
+                gl.UNSIGNED_BYTE,
+                data
+            );
+        }
+
+        this.planDraw();
+    }
+
+
 
     async onDomMounted(canvas: HTMLCanvasElement) {
         let {data} = await GET<IFieldSizesResponse>(ENDPOINTS.sizes);
