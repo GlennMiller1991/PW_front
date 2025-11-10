@@ -52,4 +52,5 @@ export const ENDPOINTS = {
 export const MIME_TYPE = {
     rawBinary: "application/octet-stream",
     json: 'application/json',
+    jpeg: "image/jpeg"
 }

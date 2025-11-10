@@ -12,7 +12,7 @@ export const App = observer(() => {
     const [controller] = useState(() => new AppController());
 
     if (!controller.isReady) return <OpeningView/>;
-
+    else if (controller.isReady) return <OpeningView/>
     return (
         <AppContext value={controller}>
             <div style={{position: 'fixed', inset: 0, display: 'grid', gridTemplateRows: 'max-content 1fr'}}>

@@ -42,7 +42,7 @@ export const DevelopmentConfig: Configuration = {
                 ],
             },
             {
-                test: /\.(png|webp)/,
+                test: /\.(png|webp|jpg)/,
                 type: 'asset/resource'
             },
             {

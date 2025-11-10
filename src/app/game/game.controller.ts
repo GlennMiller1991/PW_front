@@ -6,7 +6,7 @@ import {WebglProgram} from "@src/app/game/webgl-program";
 import vertex from "@src/app/game/vertex.glsl";
 import fragment from "@src/app/game/fragment.glsl";
 import {GlobalResizeObserver, IResizeCallback} from "@src/app/game/resize.handler";
-import {CanvasDomController} from "@src/app/game/dom/canvas.dom-controller";
+import {CanvasDomController, CanvasDomControllerGl} from "@src/app/game/dom/canvas.dom-controller";
 import {identityMatrix2d, IMatrix2d, IPoint2, Matrix2d, Point} from "@fbltd/math";
 import {MouseDragProcessReducer} from "@src/app/game/mouse-drag-process.reducer";
 import {autorun, makeAutoObservable} from "mobx";
@@ -25,7 +25,7 @@ export type IMatrix = IMatrix2d;
 
 export class GameController {
     node: HTMLDivElement;
-    canvas: CanvasDomController;
+    canvas: CanvasDomControllerGl;
     clicker: Clicker;
 
     httpPixelSource = new HttpPixelSource();
@@ -83,7 +83,7 @@ export class GameController {
 
         this.field = data;
 
-        this.canvas = new CanvasDomController(canvas);
+        this.canvas = new CanvasDomControllerGl(canvas);
         this.canvas.init();
 
         this.node = canvas.parentElement as HTMLDivElement;

@@ -9,6 +9,7 @@ export async function processResponse(response: Response) {
                 case null:
                     return null;
                 case MIME_TYPE.rawBinary:
+                case MIME_TYPE.jpeg:
                     const blob = await response.blob();
                     return await blob.arrayBuffer();
 
