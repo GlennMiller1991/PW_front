@@ -19,7 +19,7 @@ export class AnimationQueue {
         queue.forEach(f => f())
     }
 
-    clear() {
+    dispose() {
         this.queue = []
         this.rafId && window.cancelAnimationFrame(this.rafId)
     }

@@ -1,7 +1,7 @@
 import {FC, useState} from "react";
 import {app, AppController} from "@src/app/app.controller";
 import {observer} from "mobx-react-lite";
-import {OpeningView} from "@src/app/opening/opening.view";
+import {Loader} from "@src/app/opening/loader";
 import {TopPanelView} from "@src/app/top-panel/top-panel.view";
 import {AppContext} from "@src/app/app.context";
 import {GameView} from "@src/app/game/game.view";
@@ -11,15 +11,14 @@ import {Spectator} from "@src/app/game-roles/spectator";
 export const App = observer(() => {
     const [controller] = useState(() => new AppController());
 
-    if (!controller.isReady) return <OpeningView/>;
-    else if (controller.isReady) return <OpeningView/>
+    if (!controller.isReady) return <Loader backgroundText={'PIXEL WAR'}/>;
     return (
         <AppContext value={controller}>
             <div style={{position: 'fixed', inset: 0, display: 'grid', gridTemplateRows: 'max-content 1fr'}}>
                 {
                     controller.isInitSuccessful ?
                         <AppContentView/> :
-                        <div>Error view</div>
+                        <Loader backgroundText={'ERROR'}/>
                 }
             </div>
         </AppContext>

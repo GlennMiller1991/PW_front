@@ -3,6 +3,7 @@ import GoogleAuth from "@fbltd/google-auth";
 import {refreshRequest} from "@src/request/impl/refresh.request";
 import {Token} from "@src/token/token";
 import {accessibilityRequest} from "@src/request/impl/accessibility.request";
+import {delay} from "@fbltd/async";
 
 export let app: AppController;
 export class AppController {
@@ -63,6 +64,7 @@ export class AppController {
     }
 
     async init() {
+        await delay(2000);
         this.isServerAccessible = await accessibilityRequest();
         if (this._isServerAccessible) {
             const isAuthorized = await refreshRequest();

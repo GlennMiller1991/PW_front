@@ -4,8 +4,13 @@ enum MouseEventButton {
     Left = 0,
 }
 
+type IDragConfig = {
+    withDraggingOnItself: boolean,
+}
+
 export class MouseDragProcessReducer {
     private stopDragController?: AbortController;
+    private config: IDragConfig;
 
     _start?: MouseEvent;
     _drag?: MouseEvent;
@@ -23,23 +28,31 @@ export class MouseDragProcessReducer {
         return this._stop;
     }
 
-    constructor(private node: EventTarget) {
+    constructor(private node: EventTarget, config?: Partial<IDragConfig>) {
+        this.config = {
+            withDraggingOnItself: config?.withDraggingOnItself ?? true,
+        }
+
         this.init();
 
         makeObservable(this, {
             _start: true,
             _drag: true,
             _stop: true,
-        })
+        });
     }
 
     init() {
         this.node.addEventListener(this.startEvent, this.eventsHandler);
     }
 
+    get proceedTarget() {
+        return this.config.withDraggingOnItself ? this.node : document;
+    }
+
     startEvent = 'mousedown';
     moveEvent = 'mousemove';
-    stopEvents = ['mouseleave', 'mouseout', 'mouseup'];
+    stopEvents = ['mouseleave', 'mouseup'];
 
     eventsHandler = (event: MouseEvent) => {
         if (this.startEvent === event.type) {
@@ -69,9 +82,9 @@ export class MouseDragProcessReducer {
 
         this.stopDragController?.abort();
         const ac = this.stopDragController = new AbortController();
-        document.addEventListener(this.moveEvent, this.eventsHandler, {signal: ac.signal });
-        for (let event of this.stopEvents) {
-            document.addEventListener(event, this.eventsHandler, {signal: ac.signal});
+
+        for (let event of [this.moveEvent, ...this.stopEvents]) {
+            this.proceedTarget.addEventListener(event, this.eventsHandler, {signal: ac.signal});
         }
 
         this._start = event;
@@ -99,3 +112,4 @@ export class MouseDragProcessReducer {
         this.node.removeEventListener(this.startEvent, this.eventsHandler);
     }
 }
+

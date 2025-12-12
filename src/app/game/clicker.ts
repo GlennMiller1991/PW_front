@@ -30,8 +30,11 @@ export class Clicker {
         const signal = this.abortController.signal;
         this._isLoading = true;
         let p: IPoint2 = [event.offsetX, event.offsetY];
-        p = Matrix.apply(this.gameController.toField, p);
-        p = floorPoint(p);
+
+        const converter = this.gameController.pixelToFieldConverter;
+
+        p = converter(p) as IPoint2;
+        if (!p) return;
 
         await POST(ENDPOINTS.gameSet, {
             point: p,

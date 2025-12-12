@@ -6,19 +6,19 @@ import {WebglProgram} from "@src/app/game/webgl-program";
 import vertex from "@src/app/game/vertex.glsl";
 import fragment from "@src/app/game/fragment.glsl";
 import {GlobalResizeObserver, IResizeCallback} from "@src/app/game/resize.handler";
-import {CanvasDomController, CanvasDomControllerGl} from "@src/app/game/dom/canvas.dom-controller";
-import {identityMatrix2d, IMatrix2d, IPoint2, Matrix2d, Point} from "@fbltd/math";
+import {CanvasDomControllerGl} from "@src/app/game/dom/canvas.dom-controller";
+import {identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d, Point} from "@fbltd/math";
 import {MouseDragProcessReducer} from "@src/app/game/mouse-drag-process.reducer";
 import {autorun, makeAutoObservable} from "mobx";
 import {ILinearSizes} from "@src/app/game/common-types";
 import {WsConnection} from "@src/app/game/ws/ws.controller";
 import {Clicker} from "@src/app/game/clicker";
-import {updateOrCreateTexture, withGlContext} from "@src/app/game/utils";
+import {floorPoint, updateOrCreateTexture, withGlContext} from "@src/app/game/utils";
 import {HttpPixelSource} from "@src/app/game/httpPixelSource";
 import {Spectator} from "@src/app/game-roles/spectator";
 import {Challenger} from "@src/app/game-roles/challenger";
 import {Player} from "@src/app/game-roles/player";
-import {IPixelSettingMessage} from "@src/app/game/ws/contracts";
+import {DragStyler} from "@src/app/game/drag-styler/drag-styler";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -35,11 +35,46 @@ export class GameController {
     planeContext: WebGLVertexArrayObject;
     events: MouseDragProcessReducer;
     field: ILinearSizes;
-    toField: IMatrix;
+
+    /**
+     * Матрица из пиксельных координат в неокруглённые координаты поля
+     */
+    pixelToField = identityMatrix2d;
+
+    get fieldToPixel() {
+        return Matrix.invert(this.pixelToField);
+    }
+
+    get pixelToFieldTransformed() {
+        return Matrix.multiply(this.pixelToField, this.transformMatrix);
+    }
+
+    get fieldToPixelTransformed() {
+        return Matrix.invert(this.pixelToFieldTransformed)
+    }
+
+    pixelToFieldConverter = (p: IPoint2) => {
+        p = Matrix.apply(this.pixelToFieldTransformed, p);
+        p = floorPoint(p);
+        if (p[0] < 0 || p[1] < 0 || p[0] >= this.field.width || p[1] >= this.field.height) return;
+        return p;
+    }
+
+    normalized: IMatrix;
     texture: WebGLTexture;
     wsConnection = new WsConnection();
 
-    toPixelSpace = identityMatrix2d;
+    /**
+     * Матрица из нормализованных координат в пиксельные
+     */
+    spaceToPixel = identityMatrix2d;
+
+    /**
+     * Матрица из пиксельных координат в нормализованные
+     */
+    get pixelToSpace() {
+        return Matrix.invert(this.spaceToPixel);
+    }
 
     transformMatrix = identityMatrix2d;
 
@@ -73,7 +108,6 @@ export class GameController {
     }
 
 
-
     async onDomMounted(canvas: HTMLCanvasElement) {
         let {data} = await GET<IFieldSizesResponse>(ENDPOINTS.sizes);
         if (!data) return;
@@ -89,7 +123,11 @@ export class GameController {
         this.node = canvas.parentElement as HTMLDivElement;
         if (!this.canvas.isReady) return;
 
-        const events = this.events = new MouseDragProcessReducer(this.canvas.node);
+        const parent = canvas.parentElement as HTMLDivElement;
+        const events = this.events = new MouseDragProcessReducer(parent);
+        const styler = new DragStyler(events, {withSheet: true}, parent);
+
+
         this.clicker = new Clicker(this);
 
         autorun(() => {
@@ -102,7 +140,15 @@ export class GameController {
                     this.transformMatrix
                 );
 
-            this.queue.clear();
+            const m = Matrix.multiply(
+                this.pixelToField,
+                this.transformMatrix,
+            );
+
+
+            console.log(Matrix.apply(m, [0, 0]));
+
+            this.queue.dispose();
             this.queue.push(this.draw);
         });
 
@@ -121,30 +167,38 @@ export class GameController {
     }
 
     onResize: IResizeCallback = (entry) => {
-        this.queue.clear();
+        this.queue.dispose();
         this.queue.push(this.draw);
 
         const sizes = this.canvas.sizes = entry.contentRect;
 
-        this.toPixelSpace = [sizes.width, 0, 0, sizes.height, 0, 0];
+        this.spaceToPixel = [sizes.width, 0, 0, sizes.height, 0, 0];
 
         const fieldSize = this.field.width;
-        let min = Math.min(sizes.width, sizes.height);
-        let max = Math.max(sizes.width, sizes.height);
-        let sideDif = (max - min) / 2;
-        let p1: IPoint2 = [sideDif, 0];
-        let p2 = Point.sum(p1, [min, 0]);
-        let p3 = Point.sum(p1, [0, min]);
-        let p4 = Point.sum(p1, [min, min]);
-        let p5 = Point.dif(p4, [min, 0]);
-        let p6 = Point.dif(p4, [0, min])
-        const coords = [
-            ...p1, ...p2, ...p3,
-            ...p4, ...p5, ...p6
-        ];
 
-        const scale = fieldSize / min;
-        this.toField = [scale, 0, 0, scale, -sideDif * scale, 0];
+        // Квад под поле без трансформации должен соприкасаться со стенками
+        // контейнера как минимум по одной стороне
+        // Здесь исхожу из того, что поле всё таки квадратное пока
+        // Очевидно, что сторона квада в пикселях равна минимальной стороне контейнера
+        // А значит для нахождения первой точки квада
+        // достаточно из центра контейнера отнять половину минимальной стороны
+        // И дальше уже от неё обойти все вершины квада
+        let min = Math.min(sizes.width, sizes.height);
+
+        // Центр контейнера
+        let center: IPoint = [sizes.width / 2, sizes.height / 2];
+
+        // От центра в любое из направлений
+        const coords = Quad.ofCenter(center, min);
+
+        const resolution = fieldSize / min;
+
+        const halfWidthDif = (sizes.width - min) / 2;
+        const halfHeightDif = (sizes.height - min) / 2;
+
+
+        this.pixelToField = Matrix.translate([resolution, 0, 0, resolution, 0, 0], -halfWidthDif, -halfHeightDif);
+        this.transformMatrix = identityMatrix2d;
 
         this.planeContext = withGlContext(this.canvas.ctx, () => {
             this.program.allocateVertexes('a_position', coords, 2);
@@ -153,7 +207,7 @@ export class GameController {
     }
 
     planDraw = () => {
-        this.queue.clear();
+        this.queue.dispose();
         this.queue.push(this.draw);
     }
 
@@ -163,7 +217,7 @@ export class GameController {
             Matrix.invert(
                 Matrix.multiply(
                     this.transformMatrix,
-                    this.toPixelSpace,
+                    this.spaceToPixel,
                 )
             ),
         )
@@ -228,7 +282,8 @@ export class GameStatusChanging {
 
             try {
                 await this.status.do();
-            } catch {
+            } catch (err) {
+                console.log(err);
                 this.status.dispose();
                 this.status = null as any;
             }
@@ -238,5 +293,19 @@ export class GameStatusChanging {
     }
 }
 
-
-
+export abstract class Quad {
+    static ofCenter(center: IPoint2, width: number, height = width) {
+        let halfWidth = width / 2;
+        let halfHeight = height / 2;
+        let p1: IPoint2 = Point.dif(center, [halfWidth, halfHeight]);
+        let p2 = Point.sum(p1, [width, 0]);
+        let p3 = Point.sum(p1, [0, height]);
+        let p4 = Point.sum(p1, [width, height]);
+        let p5 = Point.dif(p4, [width, 0]);
+        let p6 = Point.dif(p4, [0, height])
+        return [
+            ...p1, ...p2, ...p3,
+            ...p4, ...p5, ...p6
+        ];
+    }
+}

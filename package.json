@@ -17,6 +17,7 @@
     "@types/react": "^19.x.x",
     "@types/react-dom": "^19.x.x",
     "@types/webpack-dev-server": "^4.x.x",
+    "@typescript/native-preview": "^7.0.0-dev.20251212.1",
     "copy-webpack-plugin": "^13.0.1",
     "css-loader": "^7.x.x",
     "dotenv-webpack": "^8.1.1",

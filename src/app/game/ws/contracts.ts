@@ -6,6 +6,7 @@ export enum GameMessageType {
     StatusChange = 1,
     PixelSetting = 2,
     BitmapSetting = 3,
+    FullBitmap = 4,
 }
 
 export type IMessage<TRoom extends MessageRoom = MessageRoom, T = never> = {

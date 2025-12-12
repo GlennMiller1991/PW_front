@@ -14,7 +14,7 @@ export const GameView: FC<IGameView> = memo(({controller}) => {
     }, [])
     return (
         <div className={styles.container}>
-            <canvas width={0} height={0} ref={ref}/>
+            <canvas width={0} height={0} ref={ref} style={{pointerEvents: 'none'}}/>
 
         </div>
     )
