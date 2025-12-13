@@ -8,7 +8,7 @@ import fragment from "@src/app/game/fragment.glsl";
 import {GlobalResizeObserver, IResizeCallback} from "@src/app/game/resize.handler";
 import {CanvasDomControllerGl} from "@src/app/game/dom/canvas.dom-controller";
 import {identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d, Point} from "@fbltd/math";
-import {MouseDragProcessReducer} from "@src/app/game/mouse-drag-process.reducer";
+import {DragController} from "@src/app/game/events/drag/drag.controller";
 import {autorun, makeAutoObservable} from "mobx";
 import {ILinearSizes} from "@src/app/game/common-types";
 import {WsConnection} from "@src/app/game/ws/ws.controller";
@@ -33,7 +33,7 @@ export class GameController {
     queue = new AnimationQueue();
     program: WebglProgram;
     planeContext: WebGLVertexArrayObject;
-    events: MouseDragProcessReducer;
+    events: DragController;
     field: ILinearSizes;
 
     /**
@@ -43,6 +43,24 @@ export class GameController {
 
     get fieldToPixel() {
         return Matrix.invert(this.pixelToField);
+    }
+
+    get pixelToCNDCTransformed() {
+        return Matrix.multiply(
+            spaceToCNDC,
+            this.pixelToSpaceTransformed,
+        )
+    }
+
+    get spaceToPixelTransformed() {
+        return Matrix.multiply(
+            this.transformMatrix,
+            this.spaceToPixel
+        );
+    }
+
+    get pixelToSpaceTransformed() {
+        return Matrix.invert(this.spaceToPixelTransformed);
     }
 
     get pixelToFieldTransformed() {
@@ -124,29 +142,21 @@ export class GameController {
         if (!this.canvas.isReady) return;
 
         const parent = canvas.parentElement as HTMLDivElement;
-        const events = this.events = new MouseDragProcessReducer(parent);
+        const events = this.events = new DragController(parent);
         const styler = new DragStyler(events, {withSheet: true}, parent);
 
 
         this.clicker = new Clicker(this);
 
         autorun(() => {
-            const dragEvent = events.drag;
+            const dragEvent = events.proceed?.data;
             if (!dragEvent) return;
 
             this.transformMatrix =
                 Matrix.multiply(
-                    [1, 0, 0, 1, -dragEvent.movementX, -dragEvent.movementY],
+                    [1, 0, 0, 1, -dragEvent.currentOffset[0], -dragEvent.currentOffset[1]],
                     this.transformMatrix
                 );
-
-            const m = Matrix.multiply(
-                this.pixelToField,
-                this.transformMatrix,
-            );
-
-
-            console.log(Matrix.apply(m, [0, 0]));
 
             this.queue.dispose();
             this.queue.push(this.draw);
@@ -175,6 +185,7 @@ export class GameController {
         this.spaceToPixel = [sizes.width, 0, 0, sizes.height, 0, 0];
 
         const fieldSize = this.field.width;
+
 
         // Квад под поле без трансформации должен соприкасаться со стенками
         // контейнера как минимум по одной стороне
@@ -212,8 +223,9 @@ export class GameController {
     }
 
     draw = () => {
+
         const resultMatrix = Matrix.multiply(
-            toCNDC,
+            spaceToCNDC,
             Matrix.invert(
                 Matrix.multiply(
                     this.transformMatrix,
@@ -245,7 +257,7 @@ export class GameController {
     }
 }
 
-let toCNDC: IMatrix = [2, 0, 0, -2, -1, 1];
+let spaceToCNDC: IMatrix = [2, 0, 0, -2, -1, 1];
 
 export class GameStatusChanging {
     status: Spectator | Challenger | Player;

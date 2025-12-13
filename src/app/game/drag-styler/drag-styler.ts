@@ -1,5 +1,5 @@
 import {reaction as mobxReaction} from "mobx";
-import {MouseDragProcessReducer} from "@src/app/game/mouse-drag-process.reducer";
+import {DragController} from "@src/app/game/events/drag/drag.controller";
 import {AnimationQueue} from "@src/app/game/animation-queue";
 import {IStylerPlugin} from "@src/app/game/drag-styler/contracts";
 import {DragSheetPlugin} from "@src/app/game/drag-styler/plugins/drag-sheet.plugin";
@@ -15,7 +15,7 @@ export class DragStyler {
     private animationQueue = new AnimationQueue();
     private plugins: IStylerPlugin[] = [];
 
-    constructor(private dragger: MouseDragProcessReducer, config?: Partial<IDragStylerConfig>, node?: typeof this.node) {
+    constructor(private dragger: DragController, config?: Partial<IDragStylerConfig>, node?: typeof this.node) {
         this.config = {
             withSheet: config?.withSheet ?? false,
         }
@@ -51,7 +51,7 @@ export class DragStyler {
                 }
             ),
             mobxReaction(
-                () => this.dragger.drag,
+                () => this.dragger.proceed,
                 () => {
                     if (isFirstDragWas)
                         this.animate(this.onDrag.bind(this));
