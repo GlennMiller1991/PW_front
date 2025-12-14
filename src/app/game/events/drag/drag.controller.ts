@@ -11,13 +11,13 @@ type IDragConfig = {
     withDraggingOnItself: boolean,
 }
 
-export class DragController extends UiEventController<IDragEventStart, IDragEventProceed, IDragEventStop> {
+export class DragController extends UiEventController<Required<IDragEventStart>, IDragEventProceed, IDragEventStop> {
     private config: IDragConfig;
 
     /**
      * @private
      */
-    _start: IDragEventStart;
+    _start: Required<IDragEventStart>;
 
     /**
      * @private

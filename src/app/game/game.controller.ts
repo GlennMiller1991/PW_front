@@ -19,6 +19,7 @@ import {Spectator} from "@src/app/game-roles/spectator";
 import {Challenger} from "@src/app/game-roles/challenger";
 import {Player} from "@src/app/game-roles/player";
 import {DragStyler} from "@src/app/game/drag-styler/drag-styler";
+import {ScaleController} from "@src/app/game/events/scale/scale.controller";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -142,25 +143,41 @@ export class GameController {
         if (!this.canvas.isReady) return;
 
         const parent = canvas.parentElement as HTMLDivElement;
-        const events = this.events = new DragController(parent);
-        const styler = new DragStyler(events, {withSheet: true}, parent);
+        const dragger = this.events = new DragController(parent);
+        const scaler = new ScaleController(parent);
+        const styler = new DragStyler(dragger, {withSheet: true}, parent);
 
 
         this.clicker = new Clicker(this);
 
         autorun(() => {
-            const dragEvent = events.proceed?.data;
+            const dragEvent = dragger.proceed?.data;
             if (!dragEvent) return;
 
             this.transformMatrix =
                 Matrix.multiply(
+                    this.transformMatrix,
                     [1, 0, 0, 1, -dragEvent.currentOffset[0], -dragEvent.currentOffset[1]],
-                    this.transformMatrix
                 );
 
             this.queue.dispose();
             this.queue.push(this.draw);
         });
+
+        autorun(() => {
+            const scaleEvent = scaler.proceed?.data;
+            if (!scaleEvent) return;
+
+            const m = getScaleToPointMatrix(scaleEvent.relPoint, 1 + 0.25 * scaleEvent.direction);
+            this.transformMatrix =
+                Matrix.multiply(
+                    this.transformMatrix,
+                    m,
+                );
+
+            this.queue.dispose();
+            this.queue.push(this.draw);
+        })
 
         const gl = this.canvas.ctx;
         const program = this.program = new WebglProgram(gl);
@@ -320,4 +337,12 @@ export abstract class Quad {
             ...p4, ...p5, ...p6
         ];
     }
+}
+
+export function getScaleToPointMatrix(point: IPoint2, factor: number) {
+    return Matrix.multiply(
+        [1, 0, 0, 1, point[0], point[1]],
+        [factor, 0, 0, factor, 0, 0],
+        [1, 0, 0, 1, -point[0], -point[1]]
+    )
 }
