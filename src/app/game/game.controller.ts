@@ -7,19 +7,18 @@ import vertex from "@src/app/game/vertex.glsl";
 import fragment from "@src/app/game/fragment.glsl";
 import {GlobalResizeObserver, IResizeCallback} from "@src/app/game/resize.handler";
 import {CanvasDomControllerGl} from "@src/app/game/dom/canvas.dom-controller";
-import {identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d, Point} from "@fbltd/math";
+import {identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d} from "@fbltd/math";
 import {DragController} from "@src/app/game/events/drag/drag.controller";
-import {autorun, makeAutoObservable} from "mobx";
+import {autorun, makeObservable} from "mobx";
 import {ILinearSizes} from "@src/app/game/common-types";
 import {WsConnection} from "@src/app/game/ws/ws.controller";
 import {Clicker} from "@src/app/game/clicker";
 import {floorPoint, updateOrCreateTexture, withGlContext} from "@src/app/game/utils";
 import {HttpPixelSource} from "@src/app/game/httpPixelSource";
-import {Spectator} from "@src/app/game-roles/spectator";
-import {Challenger} from "@src/app/game-roles/challenger";
-import {Player} from "@src/app/game-roles/player";
 import {DragStyler} from "@src/app/game/drag-styler/drag-styler";
 import {ScaleController} from "@src/app/game/events/scale/scale.controller";
+import {Quad} from "@src/app/game/quad";
+import {getScaleToPointMatrix} from "@src/app/game/getScaleToPointMatrix";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -28,6 +27,7 @@ export class GameController {
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
     clicker: Clicker;
+    currentColor: number = 0;
 
     httpPixelSource = new HttpPixelSource();
 
@@ -42,34 +42,8 @@ export class GameController {
      */
     pixelToField = identityMatrix2d;
 
-    get fieldToPixel() {
-        return Matrix.invert(this.pixelToField);
-    }
-
-    get pixelToCNDCTransformed() {
-        return Matrix.multiply(
-            spaceToCNDC,
-            this.pixelToSpaceTransformed,
-        )
-    }
-
-    get spaceToPixelTransformed() {
-        return Matrix.multiply(
-            this.transformMatrix,
-            this.spaceToPixel
-        );
-    }
-
-    get pixelToSpaceTransformed() {
-        return Matrix.invert(this.spaceToPixelTransformed);
-    }
-
     get pixelToFieldTransformed() {
         return Matrix.multiply(this.pixelToField, this.transformMatrix);
-    }
-
-    get fieldToPixelTransformed() {
-        return Matrix.invert(this.pixelToFieldTransformed)
     }
 
     pixelToFieldConverter = (p: IPoint2) => {
@@ -79,7 +53,6 @@ export class GameController {
         return p;
     }
 
-    normalized: IMatrix;
     texture: WebGLTexture;
     wsConnection = new WsConnection();
 
@@ -88,16 +61,13 @@ export class GameController {
      */
     spaceToPixel = identityMatrix2d;
 
-    /**
-     * Матрица из пиксельных координат в нормализованные
-     */
-    get pixelToSpace() {
-        return Matrix.invert(this.spaceToPixel);
-    }
 
     transformMatrix = identityMatrix2d;
 
     constructor() {
+        makeObservable(this, {
+            currentColor: true,
+        })
     }
 
     changeBitmap(bitmap: ArrayBuffer) {
@@ -276,73 +246,3 @@ export class GameController {
 
 let spaceToCNDC: IMatrix = [2, 0, 0, -2, -1, 1];
 
-export class GameStatusChanging {
-    status: Spectator | Challenger | Player;
-
-    constructor(private gameController: GameController) {
-        makeAutoObservable(this, {
-            status: true,
-        });
-
-        this.startIteration();
-    }
-
-    get isSpectator() {
-        return this.status instanceof Spectator;
-    }
-
-    get isChallenger() {
-        return this.status instanceof Challenger;
-    }
-
-    get isPlayer() {
-        return this.status instanceof Player;
-    }
-
-    async startIteration(): Promise<any> {
-        do {
-            let nextRole!: Spectator | Challenger | Player;
-            if (this.isSpectator) nextRole = new Challenger(this.gameController);
-            else if (this.isChallenger) nextRole = new Player(this.gameController);
-            else nextRole = new Spectator(this.gameController);
-
-            this.status?.dispose();
-            this.status = nextRole;
-
-            try {
-                await this.status.do();
-            } catch (err) {
-                console.log(err);
-                this.status.dispose();
-                this.status = null as any;
-            }
-
-        } while (true);
-
-    }
-}
-
-export abstract class Quad {
-    static ofCenter(center: IPoint2, width: number, height = width) {
-        let halfWidth = width / 2;
-        let halfHeight = height / 2;
-        let p1: IPoint2 = Point.dif(center, [halfWidth, halfHeight]);
-        let p2 = Point.sum(p1, [width, 0]);
-        let p3 = Point.sum(p1, [0, height]);
-        let p4 = Point.sum(p1, [width, height]);
-        let p5 = Point.dif(p4, [width, 0]);
-        let p6 = Point.dif(p4, [0, height])
-        return [
-            ...p1, ...p2, ...p3,
-            ...p4, ...p5, ...p6
-        ];
-    }
-}
-
-export function getScaleToPointMatrix(point: IPoint2, factor: number) {
-    return Matrix.multiply(
-        [1, 0, 0, 1, point[0], point[1]],
-        [factor, 0, 0, factor, 0, 0],
-        [1, 0, 0, 1, -point[0], -point[1]]
-    )
-}

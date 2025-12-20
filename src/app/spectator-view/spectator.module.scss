@@ -1,0 +1,87 @@
+
+.fieldSheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fieldSheet > button {
+  --size: 50px;
+  --background: lightgray;
+  height: var(--size);
+  width: var(--size);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  background: var(--background);
+}
+
+.fieldSheet button:active {
+  outline: none;
+  border: none;
+}
+
+.fieldSheet button:hover {
+  --background: #e7e6e6;
+}
+
+.noEvents {
+  pointer-events: none;
+}
+
+.topPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  border-bottom: 1px solid gray;
+  background: lightgray;
+  padding: 5px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  --btnSize: 30px;
+  --btnBackground: white;
+  --btnBackgroundHover: rgb(200, 200, 200);
+}
+
+.topPanel > button {
+  width: var(--btnSize);
+  height: var(--btnSize);
+  pointer-events: all;
+  cursor: pointer;
+  border-radius: 50%;
+  outline: none;
+  border: none;
+  background: var(--btnBackground);
+  transition: 300ms ease-in-out;
+}
+
+.topPanel > button * {
+  pointer-events: none;
+}
+
+.topPanel > button:hover {
+  background: var(--btnBackgroundHover);
+}
+
+.activeToolBtn {
+  background: aliceblue !important;
+  position: relative;
+
+}
+
+.activePalette {
+  position: absolute;
+  top: 100%;
+  outline: 1px solid gray;
+  pointer-events: all;
+  background: currentColor;
+}

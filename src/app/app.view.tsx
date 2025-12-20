@@ -1,12 +1,17 @@
 import {FC, useState} from "react";
-import {app, AppController} from "@src/app/app.controller";
+import {AppController} from "@src/app/app.controller";
 import {observer} from "mobx-react-lite";
 import {Loader} from "@src/app/opening/loader";
 import {TopPanelView} from "@src/app/top-panel/top-panel.view";
 import {AppContext} from "@src/app/app.context";
 import {GameView} from "@src/app/game/game.view";
-import {GameController, GameStatusChanging} from "@src/app/game/game.controller";
+import {GameController} from "@src/app/game/game.controller";
 import {Spectator} from "@src/app/game-roles/spectator";
+import {GameStatusChanging} from "@src/app/game/gameStatusChanging";
+import {PlayerView, SpectatorView} from "@src/app/spectator-view/spectator.view";
+import c from "classnames";
+
+export const cls = c;
 
 export const App = observer(() => {
     const [controller] = useState(() => new AppController());
@@ -22,34 +27,31 @@ export const App = observer(() => {
                 }
             </div>
         </AppContext>
+
     );
 });
+
 
 export const AppContentView: FC = observer(() => {
     const [gameCont] = useState(() => new GameController());
     const [gameStatusCont] = useState(() => new GameStatusChanging(gameCont));
     return (
         <>
-            <TopPanelView>
+            <TopPanelView/>
+            <div style={{position: 'relative'}}>
+                <GameView controller={gameCont}/>
                 {
                     gameStatusCont.isSpectator &&
-                    <SpectatorTopMenu onProceed={() => (gameStatusCont.status as Spectator).complete()}/>
+                    <SpectatorView onProceed={() => (gameStatusCont.status as Spectator).complete()}/>
                 }
-            </TopPanelView>
-            <GameView controller={gameCont}/>
+                {
+                    !gameStatusCont.isSpectator &&
+                    <PlayerView gameController={gameCont}/>
+                }
+            </div>
+
         </>
     )
 });
 
 
-type ISpectatorTopMenu = {
-    onProceed: () => void;
-}
-export const SpectatorTopMenu: FC<ISpectatorTopMenu> = observer(({
-                                                                     onProceed,
-                                                                 }) => {
-
-    if (!app.isAuthorized) return <div>You should authorize</div>
-
-    return <button onClick={onProceed}>Play</button>
-})

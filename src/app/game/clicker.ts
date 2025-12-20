@@ -2,8 +2,7 @@ import {makeObservable} from "mobx";
 import {IPoint2} from "@fbltd/math";
 import {POST} from "@src/request/request";
 import {ENDPOINTS} from "@src/request/constants";
-import {GameController, Matrix} from "@src/app/game/game.controller";
-import {floorPoint, getRandomColor} from "@src/app/game/utils";
+import {GameController} from "@src/app/game/game.controller";
 
 export class Clicker {
     _isLoading = false;
@@ -16,7 +15,7 @@ export class Clicker {
     }
 
     get canvas() {
-        return this.gameController.canvas.node;
+        return this.gameController.canvas.node.parentElement as HTMLDivElement;
     }
 
     init() {
@@ -38,7 +37,7 @@ export class Clicker {
 
         await POST(ENDPOINTS.gameSet, {
             point: p,
-            color: getRandomColor(),
+            color: this.gameController.currentColor,
         }, {signal});
 
         this.abortController = undefined;
