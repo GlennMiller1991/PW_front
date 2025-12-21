@@ -56,8 +56,8 @@ export class MessageParser {
 
                             return msg;
                         case GameMessageType.BitmapSetting:
-                            version = new Int32Array(raw.slice(0, 4))[0];
-                            buffer = raw.slice(4);
+                            version = new Int32Array(raw.slice(2, 6))[0];
+                            buffer = raw.slice(6);
                             (msg as IBitmapSettingMessage).data.data = {
                                 version,
                                 bitmap: buffer,

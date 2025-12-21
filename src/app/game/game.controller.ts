@@ -19,6 +19,7 @@ import {DragStyler} from "@src/app/game/drag-styler/drag-styler";
 import {ScaleController} from "@src/app/game/events/scale/scale.controller";
 import {Quad} from "@src/app/game/quad";
 import {getScaleToPointMatrix} from "@src/app/game/getScaleToPointMatrix";
+import {GameStatusChanging} from "@src/app/game/gameStatusChanging";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -27,7 +28,7 @@ export class GameController {
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
     clicker: Clicker;
-    currentColor: number = 0;
+    currentColor: number = 255;
 
     httpPixelSource = new HttpPixelSource();
 
@@ -36,6 +37,8 @@ export class GameController {
     planeContext: WebGLVertexArrayObject;
     events: DragController;
     field: ILinearSizes;
+
+    gameStatusChanging: GameStatusChanging;
 
     /**
      * Матрица из пиксельных координат в неокруглённые координаты поля
@@ -67,7 +70,12 @@ export class GameController {
     constructor() {
         makeObservable(this, {
             currentColor: true,
+            gameStatusChanging: true,
         })
+    }
+
+    get domWasMounted() {
+        return !!this.gameStatusChanging;
     }
 
     changeBitmap(bitmap: ArrayBuffer) {
@@ -138,7 +146,7 @@ export class GameController {
             const scaleEvent = scaler.proceed?.data;
             if (!scaleEvent) return;
 
-            const m = getScaleToPointMatrix(scaleEvent.relPoint, 1 + 0.25 * scaleEvent.direction);
+            const m = getScaleToPointMatrix(scaleEvent.relPoint, 1 + 0.1 * scaleEvent.direction);
             this.transformMatrix =
                 Matrix.multiply(
                     this.transformMatrix,
@@ -147,20 +155,21 @@ export class GameController {
 
             this.queue.dispose();
             this.queue.push(this.draw);
-        })
+        });
 
         const gl = this.canvas.ctx;
         const program = this.program = new WebglProgram(gl);
         program.buildInShader(vertex, gl.VERTEX_SHADER);
         program.buildInShader(fragment, gl.FRAGMENT_SHADER);
         program.build();
-        this.texture = updateOrCreateTexture(this.canvas.ctx, bitmapResponse.data, this.field);
 
         this.planeContext = withGlContext(gl, () => {
             program.allocateVertexes('a_texCoord', [0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0], 2);
         }, this.planeContext);
 
         GlobalResizeObserver.observe(this.node, this.onResize);
+
+        this.gameStatusChanging = new GameStatusChanging(this);
     }
 
     onResize: IResizeCallback = (entry) => {
@@ -237,6 +246,10 @@ export class GameController {
         }, this.planeContext);
     }
 
+    goHome = ()=> {
+        this.transformMatrix = identityMatrix2d;
+        this.planDraw();
+    }
 
     dispose() {
         GlobalResizeObserver.unobserve(this.node);

@@ -1,9 +1,10 @@
-import {DetailedHTMLProps, FC, HTMLAttributes, useState} from "react";
+import {DetailedHTMLProps, FC, HTMLAttributes, useEffect, useState} from "react";
 import {observer} from "mobx-react-lite";
 import {app} from "@src/app/app.controller";
 import styles from './spectator.module.scss';
 import {FaPlay} from "react-icons/fa";
 import {IoColorPaletteSharp} from "react-icons/io5";
+import {RiHome3Line} from "react-icons/ri";
 
 import {cls} from "@src/app/app.view";
 import {GameController} from "@src/app/game/game.controller";
@@ -48,6 +49,7 @@ export const PlayerView: FC<{ gameController: GameController }> = observer(({
                 return setActive(index);
             }}>
                 <PaletteBtn active={active === 0} data-index={0} gameController={gameController}/>
+                <FitInBtn active={active === 1} data-index={1} gameController={gameController}/>
             </div>
         </div>
     )
@@ -61,11 +63,11 @@ type IPaletteBtn = {
     gameController: GameController,
 } & IButtonDetailedProps;
 export const PaletteBtn: FC<IPaletteBtn> = observer(({
-                                                className,
-                                                active,
-                                                gameController,
-                                                ...props
-                                            }) => {
+                                                         className,
+                                                         active,
+                                                         gameController,
+                                                         ...props
+                                                     }) => {
     const color = numberToColor(gameController.currentColor);
     return (
         <>
@@ -77,7 +79,7 @@ export const PaletteBtn: FC<IPaletteBtn> = observer(({
             {
                 active &&
                 <div className={styles.activePalette}
-                    onClick={e => e.stopPropagation()}>
+                     onClick={e => e.stopPropagation()}>
                     <input type={'color'}
                            value={color}
                            onChange={(e) => {
@@ -102,6 +104,27 @@ export const PaletteBtn: FC<IPaletteBtn> = observer(({
             }
         </>
     )
+});
+
+export const FitInBtn: FC<IPaletteBtn> = observer(({
+                                                       active,
+                                                       className,
+                                                       gameController,
+                                                       ...props
+                                                   }) => {
+
+    useEffect(() => {
+        gameController.goHome()
+    }, [active]);
+
+    return (
+        <>
+            <button className={cls(active && styles.activeToolBtn, className)}
+                    {...props}>
+                <RiHome3Line/>
+            </button>
+        </>
+    )
 })
 
 function isPositive(n: number) {
@@ -112,12 +135,16 @@ function isNegative(n: number) {
     return !isNaN(n) && n < 0;
 }
 
+function isInteger(n: number) {
+    return (n - (n % 1)) === n;
+}
+
 function isNatural(n: number) {
-    return isPositive(n) && n % 1 === n;
+    return isPositive(n) && isInteger(n);
 }
 
 function isNonNegativeInteger(n: number) {
-    return !isNegative(n) && n % 1 === n;
+    return !isNegative(n) && isInteger(n);
 }
 
 function numberToColor(n: number): string {

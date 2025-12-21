@@ -8,12 +8,14 @@ export class HttpPixelSource {
     buffer = new Dependency<ArrayBuffer>(null as any);
 
     init() {
-        this.intervalId = setInterval(this.onCooldown, 5000) as any;
+        this.onCooldown();
     }
 
     onCooldown = async () => {
         const maybeBitmap = await this.forceGet();
         if (maybeBitmap) this.buffer.value = maybeBitmap;
+
+        this.intervalId = setTimeout(this.onCooldown, 5000) as unknown as number;
     }
 
     forceGet = async () => {

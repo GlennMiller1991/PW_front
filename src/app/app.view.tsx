@@ -34,19 +34,24 @@ export const App = observer(() => {
 
 export const AppContentView: FC = observer(() => {
     const [gameCont] = useState(() => new GameController());
-    const [gameStatusCont] = useState(() => new GameStatusChanging(gameCont));
+    const gameStatusCont = gameCont.gameStatusChanging;
     return (
         <>
             <TopPanelView/>
             <div style={{position: 'relative'}}>
                 <GameView controller={gameCont}/>
                 {
-                    gameStatusCont.isSpectator &&
-                    <SpectatorView onProceed={() => (gameStatusCont.status as Spectator).complete()}/>
-                }
-                {
-                    !gameStatusCont.isSpectator &&
-                    <PlayerView gameController={gameCont}/>
+                    gameCont.domWasMounted &&
+                    <>
+                        {
+                            gameStatusCont.isSpectator &&
+                            <SpectatorView onProceed={() => (gameStatusCont.status as Spectator).complete()}/>
+                        }
+                        {
+                            !gameStatusCont.isSpectator &&
+                            <PlayerView gameController={gameCont}/>
+                        }
+                    </>
                 }
             </div>
 

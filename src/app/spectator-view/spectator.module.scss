@@ -41,8 +41,7 @@
   left: 0;
   right: 0;
   height: 50px;
-  border-bottom: 1px solid gray;
-  background: lightgray;
+  background: transparent;
   padding: 5px;
   display: flex;
   justify-content: flex-start;
@@ -50,6 +49,7 @@
   --btnSize: 30px;
   --btnBackground: white;
   --btnBackgroundHover: rgb(200, 200, 200);
+  gap: 10px;
 }
 
 .topPanel > button {
@@ -59,7 +59,7 @@
   cursor: pointer;
   border-radius: 50%;
   outline: none;
-  border: none;
+  border: 1px solid gray;
   background: var(--btnBackground);
   transition: 300ms ease-in-out;
 }
