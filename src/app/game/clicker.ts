@@ -14,16 +14,17 @@ export class Clicker {
         })
     }
 
-    get canvas() {
-        return this.gameController.canvas.node.parentElement as HTMLDivElement;
+    get node() {
+        return this.gameController.canvas.node as unknown as HTMLDivElement;
     }
 
     init() {
-        this.canvas.addEventListener('click', this.onClick)
+        this.node.addEventListener('click', this.onClick)
     }
 
     onClick = async (event: PointerEvent) => {
         if (this._isLoading) return;
+        if (event.target !== event.currentTarget) return;
 
         this.abortController = new AbortController();
         const signal = this.abortController.signal;
@@ -46,6 +47,6 @@ export class Clicker {
 
     dispose() {
         this.abortController?.abort();
-        this.canvas?.removeEventListener('click', this.onClick);
+        this.node?.removeEventListener('click', this.onClick);
     }
 }

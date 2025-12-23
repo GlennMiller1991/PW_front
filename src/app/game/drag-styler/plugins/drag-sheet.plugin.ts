@@ -27,20 +27,22 @@ export class DragSheetPlugin extends BaseStylerPlugin {
         style.cursor = 'grabbing';
         style.zIndex = '9999';
         style.visibility = 'hidden';
-        style.pointerEvents = 'all';
+        style.pointerEvents = 'none';
 
-        this.node.appendChild(sheet);
+        node.appendChild(sheet);
         return true;
     }
 
     onFirstDrag() {
         this.sheet.style.visibility = 'visible';
         this.sheet.style.cursor = 'grabbing';
+        this.sheet.style.pointerEvents = 'all';
     }
 
     onStop() {
         this.sheet.style.visibility = 'hidden';
         this.sheet.style.cursor = this.defaultStyles.cursor!;
+        this.sheet.style.pointerEvents = 'none';
     }
 
     disposeImpl() {

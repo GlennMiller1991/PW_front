@@ -7,8 +7,8 @@ import vertex from "@src/app/game/vertex.glsl";
 import fragment from "@src/app/game/fragment.glsl";
 import {GlobalResizeObserver, IResizeCallback} from "@src/app/game/resize.handler";
 import {CanvasDomControllerGl} from "@src/app/game/dom/canvas.dom-controller";
-import {identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d} from "@fbltd/math";
-import {DragController} from "@src/app/game/events/drag/drag.controller";
+import {identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d, Point} from "@fbltd/math";
+import {DragMouseController} from "@src/app/game/events/drag/dragMouseController";
 import {autorun, makeObservable} from "mobx";
 import {ILinearSizes} from "@src/app/game/common-types";
 import {WsConnection} from "@src/app/game/ws/ws.controller";
@@ -20,6 +20,8 @@ import {ScaleController} from "@src/app/game/events/scale/scale.controller";
 import {Quad} from "@src/app/game/quad";
 import {getScaleToPointMatrix} from "@src/app/game/getScaleToPointMatrix";
 import {GameStatusChanging} from "@src/app/game/gameStatusChanging";
+import {TouchTransformController} from "@src/app/game/events/touch/touch-transform.controller";
+import {TouchEventProceed} from "@src/app/game/events/touch/contracts";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -35,7 +37,7 @@ export class GameController {
     queue = new AnimationQueue();
     program: WebglProgram;
     planeContext: WebGLVertexArrayObject;
-    events: DragController;
+    events: DragMouseController;
     field: ILinearSizes;
 
     gameStatusChanging: GameStatusChanging;
@@ -121,21 +123,25 @@ export class GameController {
         if (!this.canvas.isReady) return;
 
         const parent = canvas.parentElement as HTMLDivElement;
-        const dragger = this.events = new DragController(parent);
+        const dragger = this.events = new TouchTransformController(parent) as any;
         const scaler = new ScaleController(parent);
-        const styler = new DragStyler(dragger, {withSheet: true}, parent);
+        // const styler = new DragStyler(dragger, {withSheet: true}, parent);
 
 
         this.clicker = new Clicker(this);
 
         autorun(() => {
-            const dragEvent = dragger.proceed?.data;
+            const dragEvent = dragger.proceed;
             if (!dragEvent) return;
 
+            const e = dragEvent?.data.virtual as TouchEventProceed;
+
+            const m = getScaleToPointMatrix(e.relStartPoint, 1 + (1 - e.scale));
             this.transformMatrix =
                 Matrix.multiply(
                     this.transformMatrix,
-                    [1, 0, 0, 1, -dragEvent.currentOffset[0], -dragEvent.currentOffset[1]],
+                    m,
+                    [1, 0, 0, 1, ...Point.scale(e.eventOffset, -1)]
                 );
 
             this.queue.dispose();

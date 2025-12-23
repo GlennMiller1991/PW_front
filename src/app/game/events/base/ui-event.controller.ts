@@ -15,7 +15,9 @@ export abstract class UiEventController<
     }
 
     init() {
-        this.node.addEventListener(this.startEvent, this.eventsHandler as EventListener);
+        for (let e of this.startEvents) {
+            this.node.addEventListener(e, this.eventsHandler as EventListener);
+        }
     }
 
     eventsHandler = (event: TStart['native'] | TProceed['native'] | Required<TStop>['native']) => {
@@ -25,7 +27,7 @@ export abstract class UiEventController<
             this.onStop(event);
         }
 
-        if (this.startEvent === type) {
+        if (this.startEvents.includes(type)) {
             this.onStart(event!);
         }
 
@@ -89,12 +91,19 @@ export abstract class UiEventController<
     abstract onProceedImpl(event: TProceed['native']): void;
 
 
-    abstract startEvent: string;
+    abstract startEvent: string | Array<string>;
     abstract proceedEvent: string;
     abstract stopEvents: Array<string>;
 
+    private get startEvents() {
+        if (Array.isArray(this.startEvent)) return this.startEvent;
+        return [this.startEvent];
+    }
+
     dispose() {
         this.onStop();
-        this.node.removeEventListener(this.startEvent, this.eventsHandler as EventListener);
+        for (let e of this.startEvents) {
+            this.node.removeEventListener(e, this.eventsHandler as EventListener);
+        }
     }
 }

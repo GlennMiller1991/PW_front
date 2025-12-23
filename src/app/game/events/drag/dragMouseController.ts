@@ -11,7 +11,7 @@ type IDragConfig = {
     withDraggingOnItself: boolean,
 }
 
-export class DragController extends UiEventController<Required<IDragEventStart>, IDragEventProceed, IDragEventStop> {
+export class DragMouseController extends UiEventController<Required<IDragEventStart>, IDragEventProceed, IDragEventStop> {
     private config: IDragConfig;
 
     /**
@@ -92,6 +92,9 @@ export class DragController extends UiEventController<Required<IDragEventStart>,
         const startPoint = this.start.data.startPoint;
         const currentPoint: IPoint2 = [native.clientX, native.clientY];
 
+        if (!native.movementX && !native.movementY) return;
+
+
         this._proceed = {
             native,
             data: {
@@ -102,6 +105,6 @@ export class DragController extends UiEventController<Required<IDragEventStart>,
             }
         }
     }
-
 }
+
 
