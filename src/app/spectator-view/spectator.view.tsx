@@ -8,6 +8,7 @@ import {RiHome3Line} from "react-icons/ri";
 
 import {cls} from "@src/app/app.view";
 import {GameController} from "@src/app/game/game.controller";
+import {isNonNegativeInteger} from "@fbltd/math";
 
 type ISpectatorTopMenu = {
     onProceed: () => void;
@@ -126,26 +127,6 @@ export const FitInBtn: FC<IPaletteBtn> = observer(({
         </>
     )
 })
-
-function isPositive(n: number) {
-    return !isNaN(n) && n > 0;
-}
-
-function isNegative(n: number) {
-    return !isNaN(n) && n < 0;
-}
-
-function isInteger(n: number) {
-    return (n - (n % 1)) === n;
-}
-
-function isNatural(n: number) {
-    return isPositive(n) && isInteger(n);
-}
-
-function isNonNegativeInteger(n: number) {
-    return !isNegative(n) && isInteger(n);
-}
 
 function numberToColor(n: number): string {
     return '#' + n

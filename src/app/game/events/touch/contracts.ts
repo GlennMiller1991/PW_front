@@ -1,6 +1,5 @@
 import {IUiEventProceed, IUiEventStart, IUiEventStop} from "@src/app/game/events/base/contracts";
-import {IPoint2, Point} from "@fbltd/math";
-import {centroid} from "@src/app/game/events/touch/touch-transform.controller";
+import {centroid, IPoint2, Point} from "@fbltd/math";
 
 export type ITouchEventStart = IUiEventStart<TouchEvent, {
     virtual: TouchEventStart,
@@ -20,10 +19,10 @@ export class TouchEventStart {
         return this.native.targetTouches;
     }
 
-    get touchPoints() {
+    get touchPoints(): IPoint2[] {
         return Array
             .from(this.targetTouches)
-            .map(t => [t.clientX, t.clientY] as IPoint2)
+            .map(t => [t.clientX, t.clientY])
     }
 
     get centroid() {
@@ -50,9 +49,9 @@ export class TouchEventProceed extends TouchEventStart {
 
     init() {
         if (this.targetTouches.length > 2) {
-            this.length = pointLength(centroid(...this.touchPoints.slice(0, -1)), this.touchPoints.at(-1)!)
+            this.length = Point.distance(centroid(...this.touchPoints.slice(0, -1)), this.touchPoints.at(-1)!)
         } else if (this.targetTouches.length > 1) {
-            this.length = pointLength(this.touchPoints[0], this.touchPoints[1]);
+            this.length = Point.distance(this.touchPoints[0], this.touchPoints[1]);
         }
     }
 
@@ -61,11 +60,11 @@ export class TouchEventProceed extends TouchEventStart {
     }
 
     get eventOffset() {
-        return Point.dif(this.startPoint, this.prev.startPoint);
+        return Point.sub(this.startPoint, this.prev.startPoint);
     }
 
     get processOffset() {
-        return Point.dif(this.startPoint, this.start.startPoint);
+        return Point.sub(this.startPoint, this.start.startPoint);
     }
 
     get rect() {
@@ -79,7 +78,7 @@ export class TouchEventProceed extends TouchEventStart {
 
     get relStartPoint() {
         const rect = this.rect;
-        return Point.dif(this.startPoint, [rect.left, rect.top]);
+        return Point.sub(this.startPoint, [rect.left, rect.top]);
     }
 }
 
@@ -87,7 +86,3 @@ export type ITouchEventProceed = IUiEventProceed<TouchEvent, {
     virtual: TouchEventProceed,
 }>;
 export type ITouchEventStop = IUiEventStop<TouchEvent>;
-
-export function pointLength([x1, y1]: IPoint2, [x2, y2]: IPoint2) {
-    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5;
-}

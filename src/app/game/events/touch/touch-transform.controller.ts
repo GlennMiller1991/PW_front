@@ -1,4 +1,3 @@
-import {IPoint2, Point} from "@fbltd/math";
 import {UiEventController} from "@src/app/game/events/base/ui-event.controller";
 import {makeObservable} from "mobx";
 import {
@@ -93,13 +92,4 @@ export class TouchTransformController extends UiEventController<Required<ITouchE
             data: undefined,
         }
     }
-}
-
-export function centroid(...ps: IPoint2[]) {
-    let sum: IPoint2 = ps[0];
-    for (let i = 1; i < ps.length; i++) {
-        sum = Point.sum(sum, ps[i]);
-    }
-
-    return Point.scale(sum, 1 / ps.length);
 }
