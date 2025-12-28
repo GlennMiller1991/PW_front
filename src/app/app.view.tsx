@@ -15,21 +15,20 @@ export const cls = c;
 export const App = observer(() => {
     const [controller] = useState(() => new AppController());
 
-    const isReady = true
-    if (isReady) return <Loader backgroundText={'PIXEL WAR'}/>;
-    // if (!controller.isReady) return <Loader backgroundText={'PIXEL WAR'}/>;
-    return (
-        <AppContext value={controller}>
-            <div style={{position: 'fixed', inset: 0, display: 'grid', gridTemplateRows: 'max-content 1fr'}}>
-                {
-                    controller.isInitSuccessful ?
-                        <AppContentView/> :
-                        <Loader backgroundText={'ERROR'}/>
-                }
-            </div>
-        </AppContext>
-
-    );
+    // if (!controller.isReady)
+        return <Loader text={'PIXEL WAR'}/>;
+    // return (
+    //     <AppContext value={controller}>
+    //         <div style={{position: 'fixed', inset: 0, display: 'grid', gridTemplateRows: 'max-content 1fr'}}>
+    //             {
+    //                 controller.isInitSuccessful ?
+    //                     <AppContentView/> :
+    //                     <Loader text={'ERROR'}/>
+    //             }
+    //         </div>
+    //     </AppContext>
+    //
+    // );
 });
 
 
