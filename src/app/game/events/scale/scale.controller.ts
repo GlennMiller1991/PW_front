@@ -67,7 +67,7 @@ export class ScaleController extends UiEventController<IScaleEventStart, IScaleE
         const absPoint: IPoint2 = [native.clientX, native.clientY];
 
         const rect = this.rect;
-        const relPoint = Point.dif(absPoint, [rect.left, rect.top]);
+        const relPoint = Point.sub(absPoint, [rect.left, rect.top]);
 
         this._proceed = {
             native,

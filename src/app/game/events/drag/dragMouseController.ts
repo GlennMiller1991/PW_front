@@ -100,7 +100,7 @@ export class DragMouseController extends UiEventController<Required<IDragEventSt
             data: {
                 startPoint,
                 currentPoint,
-                totalOffset: Point.dif(currentPoint, startPoint),
+                totalOffset: Point.sub(currentPoint, startPoint),
                 currentOffset: [native.movementX, native.movementY],
             }
         }
