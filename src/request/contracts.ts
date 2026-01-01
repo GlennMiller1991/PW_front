@@ -5,7 +5,7 @@ export type IRequestConfig = {
     signal?: AbortSignal,
 }
 export type IServerErrorResponse = {
-    status: number,
+    status?: number,
 }
 export type IAppErrorResponse = {
     message: string,

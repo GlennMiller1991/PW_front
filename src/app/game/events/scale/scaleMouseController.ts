@@ -4,7 +4,7 @@ import {debounce} from "@fbltd/async";
 import {IScaleEventProceed, IScaleEventStart, IScaleEventStop} from "@src/app/game/events/scale/contracts";
 import {IPoint2, Point} from "@fbltd/math";
 
-export class ScaleController extends UiEventController<IScaleEventStart, IScaleEventProceed, IScaleEventStop> {
+export class ScaleMouseController extends UiEventController<IScaleEventStart, IScaleEventProceed, IScaleEventStop> {
     debouncedStop: ReturnType<typeof debounce> = debounce(() => this.onStop(), 10);
 
     _start: IScaleEventStart;

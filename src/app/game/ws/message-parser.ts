@@ -1,5 +1,5 @@
 import {
-    GameMessageType, IBitmapSettingMessage,
+    GameMessageType, AppMessageType, IBitmapSettingMessage, ILogoutMessage,
     IMessage,
     IPixelSettingMessage,
     IStatusChangeMessage,
@@ -66,6 +66,16 @@ export class MessageParser {
                     }
 
                     return msg;
+                case MessageRoom.App: {
+                    const room = int as MessageRoom;
+                    buffer = raw.slice(1, 2);
+                    uint8 = new Uint8Array(buffer);
+                    const type = uint8[0] as AppMessageType;
+                    return {
+                        room,
+                        data: type
+                    };
+                }
             }
             throw this._unrecognized;
         } catch (err) {
@@ -75,6 +85,10 @@ export class MessageParser {
 
     static isGameMessage(msg: IMessage<any, any>): msg is IMessage<MessageRoom.Game, any> {
         return msg.room === MessageRoom.Game;
+    }
+
+    static isAppMessage(msg: IMessage<any, any>): msg is IMessage<MessageRoom.App, AppMessageType> {
+        return msg.room === MessageRoom.App;
     }
 
     static isStatusChangeMessage(msg: IMessage<any, any>): msg is IStatusChangeMessage {
@@ -87,5 +101,9 @@ export class MessageParser {
 
     static isBitmapSettingMessage(msg: IMessage<any, any>): msg is IBitmapSettingMessage {
         return this.isGameMessage(msg) && msg.data?.type === GameMessageType.BitmapSetting;
+    }
+
+    static isLogoutMessage(msg: IMessage<any, any>): msg is ILogoutMessage {
+        return this.isAppMessage(msg) && msg.data === AppMessageType.Logout;
     }
 }

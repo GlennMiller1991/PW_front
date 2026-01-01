@@ -22,9 +22,12 @@ export async function request<T extends {}>(url: string, body?: {}, options?: Pa
     let error: ResponseError;
     try {
         data = await processResponse(response);
-    } catch(e: unknown) {
+    } catch (e: unknown) {
+        if ((e as Error).name === 'AbortError') {
+            return {isOk: false}
+        }
         error = e as ResponseError;
-        switch(error.status) {
+        switch (error.status) {
             case 401:
                 if (asIs || !await refreshRequest()) return {status: error.status, isOk: false};
                 return request(url, body, options, true);

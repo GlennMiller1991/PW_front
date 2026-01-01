@@ -8,11 +8,13 @@ export class Spectator extends BaseRole {
 
     constructor(gameController: GameController) {
         super(gameController);
-        this._stream = new DependencyStream(gameController.httpPixelSource.buffer);
     }
 
     async do() {
         this.gameController.httpPixelSource.init();
+
+        this._stream = new DependencyStream(this.gameController.httpPixelSource.buffer);
+
         const _ = this.onBufferChange();
 
         return super.do();
@@ -30,8 +32,8 @@ export class Spectator extends BaseRole {
     }
 
     dispose() {
+        this._stream?.dispose();
         this.gameController.httpPixelSource.dispose();
-
         super.dispose();
     }
 

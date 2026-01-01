@@ -1,5 +1,6 @@
 export enum MessageRoom {
     Game = 1,
+    App = 2,
 }
 
 export enum GameMessageType {
@@ -43,4 +44,13 @@ export type IBitmapSettingMessage = IMessage<
             version: number,
             bitmap: ArrayBuffer,
         }>
+>
+
+export enum AppMessageType {
+    Logout = 1,
+}
+
+export type ILogoutMessage = IMessage<
+    MessageRoom.App,
+    AppMessageType.Logout
 >

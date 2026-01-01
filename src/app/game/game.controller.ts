@@ -16,7 +16,7 @@ import {Clicker} from "@src/app/game/clicker";
 import {floorPoint, updateOrCreateTexture, withGlContext} from "@src/app/game/utils";
 import {HttpPixelSource} from "@src/app/game/httpPixelSource";
 import {DragStyler} from "@src/app/game/drag-styler/drag-styler";
-import {ScaleController} from "@src/app/game/events/scale/scale.controller";
+import {ScaleMouseController} from "@src/app/game/events/scale/scaleMouseController";
 import {Quad} from "@src/app/game/quad";
 import {getScaleToPointMatrix} from "@src/app/game/getScaleToPointMatrix";
 import {GameStatusChanging} from "@src/app/game/gameStatusChanging";
@@ -37,7 +37,11 @@ export class GameController {
     queue = new AnimationQueue();
     program: WebglProgram;
     planeContext: WebGLVertexArrayObject;
-    events: DragMouseController;
+    events: {
+        toucher: TouchTransformController,
+        dragger: DragMouseController,
+        scaler: ScaleMouseController,
+    };
     field: ILinearSizes;
 
     gameStatusChanging: GameStatusChanging;
@@ -123,31 +127,47 @@ export class GameController {
         if (!this.canvas.isReady) return;
 
         const parent = canvas.parentElement as HTMLDivElement;
-        const dragger = this.events = new TouchTransformController(parent) as any;
-        const scaler = new ScaleController(parent);
-        // const styler = new DragStyler(dragger, {withSheet: true}, parent);
+        const toucher =  new TouchTransformController(parent);
+        const scaler = new ScaleMouseController(parent);
+        const dragger = new DragMouseController(parent);
+        const styler = new DragStyler(dragger, {withSheet: true}, parent);
 
+        this.events = {
+            toucher, scaler, dragger
+        }
 
         this.clicker = new Clicker(this);
 
         autorun(() => {
-            const dragEvent = dragger.proceed;
+            const dragEvent = toucher.proceed;
             if (!dragEvent) return;
 
-            const e = dragEvent?.data.virtual as TouchEventProceed;
+            const e = dragEvent.data;
 
-            const m = getScaleToPointMatrix(e.relStartPoint, 1 + (1 - e.scale));
             this.transformMatrix =
                 Matrix.multiply(
                     this.transformMatrix,
-                    m,
+                    getScaleToPointMatrix(e.relStartPoint, 1 + (1 - e.scale)),
                     [1, 0, 0, 1, ...Point.scale(e.eventOffset, -1)]
                 );
 
             this.queue.dispose();
             this.queue.push(this.draw);
         });
+        autorun(() => {
+            const dragEvent = dragger.proceed;
+            if (!dragEvent) return;
 
+            const e = dragEvent.data!;
+            this.transformMatrix =
+                Matrix.multiply(
+                    this.transformMatrix,
+                    [1, 0, 0, 1, ...Point.scale(e.currentOffset, -1)]
+                );
+
+            this.queue.dispose();
+            this.queue.push(this.draw);
+        });
         autorun(() => {
             const scaleEvent = scaler.proceed?.data;
             if (!scaleEvent) return;
@@ -239,7 +259,7 @@ export class GameController {
         const gl = this.canvas.ctx;
         this.program.allocateTransform(resultMatrix, 'u_transform');
 
-        gl.clearColor(1, 1, 0, .5);
+        gl.clearColor(1, 1, 1, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         withGlContext(gl, () => {
             gl.activeTexture(gl.TEXTURE0);
@@ -259,7 +279,9 @@ export class GameController {
 
     dispose() {
         GlobalResizeObserver.unobserve(this.node);
-        this.events?.dispose();
+        this.events?.toucher.dispose();
+        this.events?.dragger.dispose();
+        this.events?.scaler.dispose();
     }
 }
 

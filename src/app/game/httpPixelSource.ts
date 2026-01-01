@@ -3,9 +3,9 @@ import {GET} from "@src/request/request";
 import {ENDPOINTS} from "@src/request/constants";
 
 export class HttpPixelSource {
-    intervalId: number;
+    timeoutId: number;
     abortController?: AbortController;
-    buffer = new Dependency<ArrayBuffer>(null as any);
+    buffer: Dependency<ArrayBuffer> = new Dependency<ArrayBuffer>(null as any);
 
     init() {
         this.onCooldown();
@@ -15,7 +15,8 @@ export class HttpPixelSource {
         const maybeBitmap = await this.forceGet();
         if (maybeBitmap) this.buffer.value = maybeBitmap;
 
-        this.intervalId = setTimeout(this.onCooldown, 5000) as unknown as number;
+
+        this.timeoutId = setTimeout(this.onCooldown, 5000) as any;
     }
 
     forceGet = async () => {
@@ -32,7 +33,7 @@ export class HttpPixelSource {
 
 
     dispose() {
-        clearInterval(this.intervalId);
+        clearInterval(this.timeoutId);
         this.abortController?.abort();
         this.buffer.dispose();
     }

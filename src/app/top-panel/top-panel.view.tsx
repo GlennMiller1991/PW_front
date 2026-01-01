@@ -15,7 +15,7 @@ export const TopPanelView: FC<PropsWithChildren> = observer(({
         <div className={styles.container}>
             <Logo/>
             {
-                !app.isAuthorized &&
+                app.isReady && app.isInitSuccessful && !app.isAuthorized &&
                 <div ref={(node) => {
                     if (!node) return;
                     app.google!.accounts.id.initialize({

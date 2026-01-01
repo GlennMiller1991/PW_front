@@ -3,7 +3,7 @@ import {PromiseConfiguration} from "@fbltd/async";
 export class FontCSSLoader {
     protected cache: Map<string, {
         link?: HTMLLinkElement,
-        promise?: PromiseConfiguration<void>
+        promise?: PromiseConfiguration
     }> = new Map();
 
     load(family: string, url: string) {
@@ -12,11 +12,35 @@ export class FontCSSLoader {
         }
 
         const link = document.createElement('link');
+        const listener = () => {
+            document.fonts.ready.then((fs) => {
+                const fsArr = Array
+                    .from(fs)
+                    .filter(f => f.family === family);
+
+                fsArr.forEach(f => f.load());
+
+                Promise
+                    .all(fsArr.map(f => f.loaded))
+                    .then(() => p.resolve())
+                    .catch(() => {
+                        this.cache.delete(family);
+                        p.reject(new Error("load was unsuccessful"));
+                    })
+                    .finally(() => {
+                        link.removeEventListener('load', listener);
+                        entry.link = undefined;
+                        entry.promise = undefined;
+                    });
+
+            })
+        }
+        link.addEventListener('load', listener)
         link.rel = 'stylesheet';
         link.href = url;
         document.head.appendChild(link);
 
-        const p = new PromiseConfiguration<void>();
+        const p = new PromiseConfiguration();
 
         this.cache.set(family, {
             link,
@@ -25,28 +49,6 @@ export class FontCSSLoader {
 
         const entry = this.cache.get(family)!;
 
-        document.fonts.ready.then((fs) => {
-            const fsArr = Array
-                .from(fs)
-                .filter(f => f.family === family);
-
-            fsArr.forEach(f => f.load());
-
-            Promise
-                .all(fsArr.map(f => f.loaded))
-                .then(() => p.resolve())
-                .catch(() => {
-                    this.cache.delete(family);
-                    p.reject(new Error("load was unsuccessful"));
-                })
-                .finally(() => {
-                    link.remove();
-                    entry.link = undefined;
-                    entry.promise = undefined;
-                })
-            ;
-
-        })
 
         return p.promise;
     }

@@ -1,6 +1,6 @@
 import styles from './opening.module.scss';
 import {FC, useEffect, useRef, useState} from "react";
-import {OpeningViewController} from "@src/app/opening/controller";
+import {LoaderController} from "@src/app/opening/controller";
 
 type ILoader = {
     text: string;
@@ -10,7 +10,7 @@ export const Loader: FC<ILoader> = ({
                                     }) => {
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [controller] = useState(() => new OpeningViewController(text));
+    const [controller] = useState(() => new LoaderController(text));
 
     useEffect(() => {
         controller.onDomMounted(canvasRef.current!);
@@ -23,4 +23,3 @@ export const Loader: FC<ILoader> = ({
         </div>
     )
 }
-

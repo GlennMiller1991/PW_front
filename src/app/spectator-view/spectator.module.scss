@@ -5,6 +5,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  pointer-events: none;
 }
 
 .fieldSheet > button {
@@ -20,6 +21,7 @@
   border: none;
   cursor: pointer;
   background: var(--background);
+  pointer-events: all;
 }
 
 .fieldSheet button:active {

@@ -1,7 +1,17 @@
 .container {
-    height: 150px;
+    height: max-content;
     width: 100%;
     background: aliceblue;
-    display: grid;
-    grid-template-columns: max-content 1fr;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    --size: 3em;
+}
+
+.container > * {
+    width: var(--size);
+    height: var(--size);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

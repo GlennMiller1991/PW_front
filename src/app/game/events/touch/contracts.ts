@@ -82,7 +82,5 @@ export class TouchEventProceed extends TouchEventStart {
     }
 }
 
-export type ITouchEventProceed = IUiEventProceed<TouchEvent, {
-    virtual: TouchEventProceed,
-}>;
+export type ITouchEventProceed = IUiEventProceed<TouchEvent, TouchEventProceed>;
 export type ITouchEventStop = IUiEventStop<TouchEvent>;

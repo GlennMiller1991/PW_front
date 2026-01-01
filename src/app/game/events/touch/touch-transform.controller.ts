@@ -7,7 +7,7 @@ import {
     TouchEventProceed, TouchEventStart
 } from "@src/app/game/events/touch/contracts";
 
-export class TouchTransformController extends UiEventController<Required<ITouchEventStart>, ITouchEventProceed, ITouchEventStop> {
+export class TouchTransformController extends UiEventController<Required<ITouchEventStart>, Required<ITouchEventProceed>, ITouchEventStop> {
     private _prevProceed: TouchEventProceed | undefined;
 
     /**
@@ -18,7 +18,7 @@ export class TouchTransformController extends UiEventController<Required<ITouchE
     /**
      * @private
      */
-    _proceed: ITouchEventProceed;
+    _proceed: Required<ITouchEventProceed>;
 
     /**
      * @private
@@ -75,9 +75,7 @@ export class TouchTransformController extends UiEventController<Required<ITouchE
 
             this._proceed = {
                 native,
-                data: {
-                    virtual,
-                }
+                data: virtual,
             }
         }
 

@@ -15,12 +15,21 @@ export class WsConnection {
     message : Dependency<IUnhandledMessages>;
 
     init(): Promise<void> {
-        this.connection = new WebSocket(ENDPOINTS.wsUpgrade);
-        this.unhandledMessages = new Queue();
-        this.message = new Dependency(null as any);
         const promiseConf = new PromiseConfiguration<void>();
         this.onOpen.resolve = promiseConf.resolve;
+        this.onOpen.reject = promiseConf.reject;
+
+        try {
+            this.connection = new WebSocket(ENDPOINTS.wsUpgrade);
+        } catch(error) {
+            this.onClose();
+            return promiseConf.promise;
+        }
+        this.unhandledMessages = new Queue();
+        this.message = new Dependency(null as any);
         this.connection.addEventListener('open', this.onOpen);
+        this.connection.addEventListener('error', this.onError);
+
         return promiseConf.promise;
     }
 
@@ -30,7 +39,12 @@ export class WsConnection {
 
         this.connection.removeEventListener('open', this.onOpen);
         this.onOpen.resolve?.();
-    }) as { (event: MessageEvent): void; resolve: Function }
+        this.clearOnOpen();
+    }) as { (event: MessageEvent): void; resolve: Function, reject: Function }
+
+    private clearOnOpen = () => {
+        this.onOpen.resolve = this.onOpen.reject = null as any;
+    }
 
     onMessage = async (message: MessageEvent) => {
         const data = message.data as Blob;
@@ -48,13 +62,20 @@ export class WsConnection {
     }
 
     onClose = () => {
-        this.connection.removeEventListener('message', this.onMessage);
-        this.connection.removeEventListener('close', this.onClose);
-        this.connection.removeEventListener('open', this.onOpen);
-        this.message.dispose();
+        this.connection?.removeEventListener('message', this.onMessage);
+        this.connection?.removeEventListener('close', this.onClose);
+        this.connection?.removeEventListener('open', this.onOpen);
+        this.connection?.removeEventListener('error', this.onError);
+        this.message?.dispose();
         this.connection = null as any;
-        this.unhandledMessages.dispose();
+        this.unhandledMessages?.dispose();
         this.unhandledMessages = null as any;
+        this.clearOnOpen();
+    }
+
+    onError = () => {
+        this.onOpen.reject?.();
+        this.onClose();
     }
 
     dispose() {

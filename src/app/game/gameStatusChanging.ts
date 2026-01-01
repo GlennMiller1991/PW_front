@@ -3,6 +3,7 @@ import {Challenger} from "@src/app/game-roles/challenger";
 import {Player} from "@src/app/game-roles/player";
 import {makeAutoObservable} from "mobx";
 import {GameController} from "@src/app/game/game.controller";
+import {app} from "@src/app/app.controller";
 
 export class GameStatusChanging {
     status: Spectator | Challenger | Player;
@@ -40,12 +41,16 @@ export class GameStatusChanging {
             try {
                 await this.status.do();
             } catch (err) {
-                console.log(err);
+                app.logout();
                 this.status.dispose();
                 this.status = null as any;
             }
 
         } while (true);
 
+    }
+
+    dispose() {
+        console.log('disposed')
     }
 }

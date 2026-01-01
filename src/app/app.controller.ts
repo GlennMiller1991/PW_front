@@ -64,7 +64,7 @@ export class AppController {
     }
 
     async init() {
-        await delay(2000);
+        let time = Date.now();
         this.isServerAccessible = await accessibilityRequest();
         if (this._isServerAccessible) {
             const isAuthorized = await refreshRequest();
@@ -73,7 +73,17 @@ export class AppController {
             }
         }
 
+        time = Date.now() - time;
+        time = 2000 - time;
+        if (time > 0) {
+            await delay(time);
+        }
+
         this.isInitWas = true;
+    }
+
+    logout() {
+        this.jwt.token = undefined;
     }
 }
 

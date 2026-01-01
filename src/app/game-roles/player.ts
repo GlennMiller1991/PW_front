@@ -3,6 +3,7 @@ import {MessageParser} from "@src/app/game/ws/message-parser";
 import {DependencyStream} from "@fbltd/async";
 import {IUnhandledMessages} from "@src/app/game/ws/ws.controller";
 import {BaseRole} from "@src/app/game-roles/base.role";
+import {app} from "@src/app/app.controller";
 
 export class Player extends BaseRole {
     declare _stream: DependencyStream<IUnhandledMessages>;
@@ -24,15 +25,19 @@ export class Player extends BaseRole {
     }
 
     async onMessage() {
-        for await (let {unhandledMessages} of this._stream) {
-            for (let msg of unhandledMessages) {
+        outer:
+            for await (let {unhandledMessages} of this._stream) {
+                for (let msg of unhandledMessages) {
+                    if (MessageParser.isLogoutMessage(msg)) {
+                        break outer;
+                    }
 
-                if (MessageParser.isPixelSettingMessage(msg)) {
-                    this.gameController.changeBitmapPart(msg.data.data.pixels.map((pixels) => pixels.slice(1) as any))
+                    if (MessageParser.isPixelSettingMessage(msg)) {
+                        this.gameController.changeBitmapPart(msg.data.data.pixels.map((pixels) => pixels.slice(1) as any))
+                    }
+
                 }
-
             }
-        }
 
         if (this._completion.isPending) {
             this._completion.reject(null as any);

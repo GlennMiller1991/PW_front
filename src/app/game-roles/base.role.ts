@@ -17,7 +17,7 @@ export abstract class BaseRole {
     dispose() {
         this._completion.reject(null as any);
 
-        this._stream.dispose();
+        this._stream?.dispose();
     }
 
 

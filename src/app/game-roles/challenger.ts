@@ -14,12 +14,24 @@ export class Challenger extends BaseRole {
     }
 
     async do() {
-        await this.gameController.wsConnection.init();
-        this._stream = new DependencyStream(this.gameController.wsConnection.message);
-        const _ = this.onMessage();
+        const owner = this;
 
-        await this.updateBitmap();
+        const _ = doImpl();
+
         return super.do();
+
+        async function doImpl() {
+            try {
+                await owner.gameController.wsConnection.init();
+                owner._stream = new DependencyStream(owner.gameController.wsConnection.message);
+                const _ = owner.onMessage();
+
+                await owner.updateBitmap();
+            } catch (e) {
+                owner.dispose();
+            }
+
+        }
     }
 
     async updateBitmap() {
@@ -45,32 +57,36 @@ export class Challenger extends BaseRole {
     }
 
     async onMessage() {
-        for await (let {unhandledMessages} of this._stream) {
-            for (let msg of unhandledMessages) {
-                if (MessageParser.isPixelSettingMessage(msg)) {
-                    // cant apply changes because client version is more correct
-                    if (msg.data.data.version <= this._clientBitmapVersion) continue;
+        outer:
+            for await (let {unhandledMessages} of this._stream) {
+                for (let msg of unhandledMessages) {
+                    if (MessageParser.isLogoutMessage(msg)) {
+                        break outer;
+                    }
+                    if (MessageParser.isPixelSettingMessage(msg)) {
+                        // cant apply changes because client version is more correct
+                        if (msg.data.data.version <= this._clientBitmapVersion) continue;
 
-                    let versionDif = msg.data.data.pixels[0][0] - this._clientBitmapVersion;
+                        let versionDif = msg.data.data.pixels[0][0] - this._clientBitmapVersion;
 
-                    if (versionDif > 1) {
-                        // force update bitmap if messages version greater thant bitmap cause
-                        // there is absent some changes on the client
-                        await this.updateBitmap();
+                        if (versionDif > 1) {
+                            // force update bitmap if messages version greater thant bitmap cause
+                            // there is absent some changes on the client
+                            await this.updateBitmap();
+                            continue;
+                        }
+
+                        // actualize client version with server version
+                        this._clientBitmapVersion = msg.data.data.version;
+
+                        this.gameController.changeBitmapPart(msg.data.data.pixels.map((pixels) => pixels.slice(1) as any))
                         continue;
                     }
-
-                    // actualize client version with server version
-                    this._clientBitmapVersion = msg.data.data.version;
-
-                    this.gameController.changeBitmapPart(msg.data.data.pixels.map((pixels) => pixels.slice(1) as any))
-                    continue;
-                }
-                if (MessageParser.isStatusChangeMessage(msg)) {
-                    this._completion.resolve();
+                    if (MessageParser.isStatusChangeMessage(msg)) {
+                        this._completion.resolve();
+                    }
                 }
             }
-        }
 
 
         if (this._completion.isPending) {

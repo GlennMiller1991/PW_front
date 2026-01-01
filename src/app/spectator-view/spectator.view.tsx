@@ -29,7 +29,7 @@ export const SpectatorView: FC<ISpectatorTopMenu> = observer(({
 });
 
 
-export const PlayerView: FC<{ gameController: GameController }> = observer(({
+export const FieldControls: FC<{ gameController: GameController }> = observer(({
                                                                                 gameController,
                                                                             }) => {
     const [active, setActive] = useState<number | undefined>(undefined);

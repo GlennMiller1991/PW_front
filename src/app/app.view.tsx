@@ -7,7 +7,7 @@ import {AppContext} from "@src/app/app.context";
 import {GameView} from "@src/app/game/game.view";
 import {GameController} from "@src/app/game/game.controller";
 import {Spectator} from "@src/app/game-roles/spectator";
-import {PlayerView, SpectatorView} from "@src/app/spectator-view/spectator.view";
+import {FieldControls, SpectatorView} from "@src/app/spectator-view/spectator.view";
 import c from "classnames";
 
 export const cls = c;
@@ -15,20 +15,26 @@ export const cls = c;
 export const App = observer(() => {
     const [controller] = useState(() => new AppController());
 
-    // if (!controller.isReady)
-        return <Loader text={'PIXEL WAR'}/>;
-    // return (
-    //     <AppContext value={controller}>
-    //         <div style={{position: 'fixed', inset: 0, display: 'grid', gridTemplateRows: 'max-content 1fr'}}>
-    //             {
-    //                 controller.isInitSuccessful ?
-    //                     <AppContentView/> :
-    //                     <Loader text={'ERROR'}/>
-    //             }
-    //         </div>
-    //     </AppContext>
-    //
-    // );
+    return (
+        <>
+            {
+                !controller.isReady &&
+                <Loader text={'PIXEL WAR'}/>
+            }
+
+            {
+                controller.isReady && !controller.isInitSuccessful &&
+                <Loader text={'ERROR'}/>
+            }
+
+            <AppContext value={controller}>
+                <div style={{position: 'fixed', inset: 0, display: 'grid', gridTemplateRows: 'max-content 1fr'}}>
+                    <AppContentView/>
+                </div>
+            </AppContext>
+        </>
+
+    );
 });
 
 
@@ -47,10 +53,8 @@ export const AppContentView: FC = observer(() => {
                             gameStatusCont.isSpectator &&
                             <SpectatorView onProceed={() => (gameStatusCont.status as Spectator).complete()}/>
                         }
-                        {
-                            !gameStatusCont.isSpectator &&
-                            <PlayerView gameController={gameCont}/>
-                        }
+
+                        <FieldControls gameController={gameCont}/>
                     </>
                 }
             </div>
