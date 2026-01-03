@@ -1,12 +1,11 @@
-import {FontCSSLoader} from "@src/app/opening/font-css-loader";
 import preloaded from "@pic/war.jpg";
 import {delay, PromiseConfiguration} from "@fbltd/async";
 import {IPoint2} from "@fbltd/math";
 import {getTextMetrics} from "@src/app/opening/canvas-utils";
+import {app} from "@src/app/app.controller";
 
 export class ImagePreparer {
     protected readonly cache: Map<string, {bitmap?: ImageBitmap, promise?: PromiseConfiguration<ImageBitmap>}> = new Map();
-    protected readonly fontLoader = new FontCSSLoader();
 
     async getImage(text: string) {
         const w = window.visualViewport!.width;
@@ -69,8 +68,7 @@ export class ImagePreparer {
             const href = "https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
 
             try {
-                await this.fontLoader.load(family, href);
-                await delay(100);
+                await app.fontLoader.load(family, href);
 
                 ctx.globalCompositeOperation = 'destination-in';
                 ctx.fillStyle = 'black';

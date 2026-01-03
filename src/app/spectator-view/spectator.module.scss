@@ -1,4 +1,3 @@
-
 .fieldSheet {
   position: absolute;
   inset: 0;
@@ -6,31 +5,6 @@
   justify-content: center;
   align-items: center;
   pointer-events: none;
-}
-
-.fieldSheet > button {
-  --size: 50px;
-  --background: lightgray;
-  height: var(--size);
-  width: var(--size);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  outline: none;
-  border: none;
-  cursor: pointer;
-  background: var(--background);
-  pointer-events: all;
-}
-
-.fieldSheet button:active {
-  outline: none;
-  border: none;
-}
-
-.fieldSheet button:hover {
-  --background: #e7e6e6;
 }
 
 .noEvents {
@@ -86,4 +60,10 @@
   outline: 1px solid gray;
   pointer-events: all;
   background: currentColor;
+}
+
+.googleContainer {
+  pointer-events: all;
+  width: 50px;
+  height: 50px;
 }

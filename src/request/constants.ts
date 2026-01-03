@@ -1,5 +1,3 @@
-import {app} from "@src/app/app.controller";
-
 export const ENDPOINTS = {
     get base() {
         return '/api';

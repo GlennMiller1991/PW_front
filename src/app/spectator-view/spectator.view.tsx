@@ -1,4 +1,4 @@
-import {DetailedHTMLProps, FC, HTMLAttributes, useEffect, useState} from "react";
+import {DetailedHTMLProps, FC, HTMLAttributes, useEffect, useRef, useState} from "react";
 import {observer} from "mobx-react-lite";
 import {app} from "@src/app/app.controller";
 import styles from './spectator.module.scss';
@@ -9,6 +9,9 @@ import {RiHome3Line} from "react-icons/ri";
 import {cls} from "@src/app/app.view";
 import {GameController} from "@src/app/game/game.controller";
 import {isNonNegativeInteger} from "@fbltd/math";
+import {authRequest} from "@src/request/impl/auth.request";
+import {BaseButton} from "@src/app/top-panel/buttons/base.button";
+import {hexColorToNumber, isNotNullish, numberToColor} from "@src/app/spectator-view/utils";
 
 type ISpectatorTopMenu = {
     onProceed: () => void;
@@ -17,21 +20,39 @@ export const SpectatorView: FC<ISpectatorTopMenu> = observer(({
                                                                   onProceed,
                                                               }) => {
 
-    if (!app.isAuthorized) return;
+    const rendered = useRef(false);
 
     return (
         <div className={styles.fieldSheet}>
-            <button onClick={onProceed} className={styles.test}>
-                <FaPlay/>
-            </button>
+            {
+                app.isReady && app.isInitSuccessful && !app.isAuthorized &&
+                <div className={cls(styles.googleContainer, 'flex_center')}
+                     ref={(node) => {
+                         if (!node) return;
+                         if (rendered.current) return;
+                         rendered.current = true;
+
+
+                         app.google!.accounts.id.initialize({
+                             client_id: process.env.GOOGLE_APP_ID!,
+                             callback: async ({credential}) =>
+                                 authRequest(credential)
+                         });
+
+                         app.google!.accounts.id.renderButton(node, {
+                             type: 'icon'
+                         });
+
+                     }}/>
+            }
         </div>
     )
 });
 
 
 export const FieldControls: FC<{ gameController: GameController }> = observer(({
-                                                                                gameController,
-                                                                            }) => {
+                                                                                   gameController,
+                                                                               }) => {
     const [active, setActive] = useState<number | undefined>(undefined);
 
     return (
@@ -128,28 +149,3 @@ export const FitInBtn: FC<IPaletteBtn> = observer(({
     )
 })
 
-function numberToColor(n: number): string {
-    return '#' + n
-        .toString(16)
-        .slice(-6)
-        .padStart(6, '0');
-}
-
-function isValidHexColor(c: string) {
-    const regexps = [
-        new RegExp(/^#[0-9a-f]{3}$/),
-        new RegExp(/^#[0-9a-f]{6}$/),
-    ]
-    return regexps.some(regexp => regexp.test(c));
-}
-
-function hexColorToNumber(c: string) {
-    if (!isValidHexColor(c)) return;
-
-    c = c.replace('#', '0x');
-    return Number(c);
-}
-
-function isNotNullish<T>(arg: T): arg is NonNullable<T> {
-    return arg != null;
-}

@@ -21,12 +21,13 @@ import {Quad} from "@src/app/game/quad";
 import {getScaleToPointMatrix} from "@src/app/game/getScaleToPointMatrix";
 import {GameStatusChanging} from "@src/app/game/gameStatusChanging";
 import {TouchTransformController} from "@src/app/game/events/touch/touch-transform.controller";
-import {TouchEventProceed} from "@src/app/game/events/touch/contracts";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
 
 export class GameController {
+    disposer = createFnStorage();
+
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
     clicker: Clicker;
@@ -127,7 +128,7 @@ export class GameController {
         if (!this.canvas.isReady) return;
 
         const parent = canvas.parentElement as HTMLDivElement;
-        const toucher =  new TouchTransformController(parent);
+        const toucher = new TouchTransformController(parent);
         const scaler = new ScaleMouseController(parent);
         const dragger = new DragMouseController(parent);
         const styler = new DragStyler(dragger, {withSheet: true}, parent);
@@ -138,50 +139,39 @@ export class GameController {
 
         this.clicker = new Clicker(this);
 
-        autorun(() => {
-            const dragEvent = toucher.proceed;
-            if (!dragEvent) return;
+        this.disposer.push(
+            autorun(() => {
+                const dragEvent = toucher.proceed?.data;
+                if (!dragEvent) return;
 
-            const e = dragEvent.data;
+                this.applyTransform(
+                    Matrix.multiply(
+                        getScaleToPointMatrix(dragEvent.relStartPoint, 1 + (1 - dragEvent.scale)),
+                        [1, 0, 0, 1, ...Point.scale(dragEvent.eventOffset, -1)]
+                    )
+                )
+            }),
+            autorun(() => {
+                const dragEvent = dragger.proceed?.data;
+                if (!dragEvent) return;
 
-            this.transformMatrix =
-                Matrix.multiply(
-                    this.transformMatrix,
-                    getScaleToPointMatrix(e.relStartPoint, 1 + (1 - e.scale)),
-                    [1, 0, 0, 1, ...Point.scale(e.eventOffset, -1)]
-                );
+                this.applyTransform(
+                    [1, 0, 0, 1, ...Point.scale(dragEvent.currentOffset, -1)]
+                )
+            }),
+            autorun(() => {
+                const scaleEvent = scaler.proceed?.data;
+                if (!scaleEvent) return;
 
-            this.queue.dispose();
-            this.queue.push(this.draw);
-        });
-        autorun(() => {
-            const dragEvent = dragger.proceed;
-            if (!dragEvent) return;
+                const m = getScaleToPointMatrix(scaleEvent.relPoint, 1 + 0.1 * scaleEvent.direction);
+                this.applyTransform(m);
+            }),
+            toucher.dispose.bind(toucher),
+            scaler.dispose.bind(scaler),
+            dragger.dispose.bind(dragger),
+            styler.dispose.bind(styler),
+        );
 
-            const e = dragEvent.data!;
-            this.transformMatrix =
-                Matrix.multiply(
-                    this.transformMatrix,
-                    [1, 0, 0, 1, ...Point.scale(e.currentOffset, -1)]
-                );
-
-            this.queue.dispose();
-            this.queue.push(this.draw);
-        });
-        autorun(() => {
-            const scaleEvent = scaler.proceed?.data;
-            if (!scaleEvent) return;
-
-            const m = getScaleToPointMatrix(scaleEvent.relPoint, 1 + 0.1 * scaleEvent.direction);
-            this.transformMatrix =
-                Matrix.multiply(
-                    this.transformMatrix,
-                    m,
-                );
-
-            this.queue.dispose();
-            this.queue.push(this.draw);
-        });
 
         const gl = this.canvas.ctx;
         const program = this.program = new WebglProgram(gl);
@@ -196,6 +186,16 @@ export class GameController {
         GlobalResizeObserver.observe(this.node, this.onResize);
 
         this.gameStatusChanging = new GameStatusChanging(this);
+    }
+
+    applyTransform(m: IMatrix2d) {
+        this.transformMatrix =
+            Matrix.multiply(
+                this.transformMatrix,
+                m,
+            );
+
+        this.planDraw();
     }
 
     onResize: IResizeCallback = (entry) => {
@@ -272,18 +272,26 @@ export class GameController {
         }, this.planeContext);
     }
 
-    goHome = ()=> {
+    goHome = () => {
         this.transformMatrix = identityMatrix2d;
         this.planDraw();
     }
 
     dispose() {
         GlobalResizeObserver.unobserve(this.node);
-        this.events?.toucher.dispose();
-        this.events?.dragger.dispose();
-        this.events?.scaler.dispose();
+        this.disposer.run();
     }
 }
 
 let spaceToCNDC: IMatrix = [2, 0, 0, -2, -1, 1];
 
+export function createFnStorage() {
+    let arr: Array<Function> = [];
+    return {
+        push: arr.push,
+        run() {
+            arr.forEach(f => f());
+            arr.length = 0;
+        }
+    }
+}

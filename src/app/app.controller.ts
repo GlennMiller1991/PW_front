@@ -4,8 +4,17 @@ import {refreshRequest} from "@src/request/impl/refresh.request";
 import {Token} from "@src/token/token";
 import {accessibilityRequest} from "@src/request/impl/accessibility.request";
 import {delay} from "@fbltd/async";
+import {FontCSSLoader} from "@src/app/opening/font-css-loader";
+
+export const fonts = {
+    pixel: {
+        family: 'Pixelify Sans',
+        src: 'https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap'
+    }
+}
 
 export let app: AppController;
+
 export class AppController {
     private _jwt = new Token();
 
@@ -13,6 +22,7 @@ export class AppController {
     private _isServerAccessible = false;
     private _isInitWas = false;
     private _fatalError = false;
+    public readonly fontLoader = new FontCSSLoader();
 
     set isInitWas(value: boolean) {
         this._isInitWas = value;
@@ -67,10 +77,22 @@ export class AppController {
         let time = Date.now();
         this.isServerAccessible = await accessibilityRequest();
         if (this._isServerAccessible) {
-            const isAuthorized = await refreshRequest();
-            if (!isAuthorized) {
+            const auth = refreshRequest;
+            const loadLib = async () => {
                 this.google = await GoogleAuth.import();
             }
+            const loadFonts = async () => {
+                const ps = Object
+                    .values(fonts)
+                    .map((f) => this.fontLoader.load(f.family, f.src))
+                return Promise.all(ps);
+            }
+
+            await Promise.all([
+                auth(),
+                loadLib(),
+                loadFonts(),
+            ])
         }
 
         time = Date.now() - time;

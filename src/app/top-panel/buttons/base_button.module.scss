@@ -1,0 +1,10 @@
+.styling {
+    border: none;
+    outline: none;
+}
+
+.sizing {
+    --calculated_size: var(--base_button_size, 'max-content');
+    height: var(--calculated_size);
+    width: var(--calculated_size);
+}

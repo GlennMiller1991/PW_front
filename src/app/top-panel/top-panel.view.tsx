@@ -1,41 +1,38 @@
 import styles from './top-panel.module.css';
 import {Logo} from "@src/app/logo/logo.view";
-import {useAppContext} from "@src/app/app.context";
 import {observer} from 'mobx-react-lite';
-
-import {authRequest} from "@src/request/impl/auth.request";
-import {FC, PropsWithChildren} from "react";
+import {BiLogOutCircle} from "react-icons/bi";
+import {ButtonHTMLAttributes, DetailedHTMLProps, FC, HTMLAttributes, PropsWithChildren} from "react";
+import {BaseButton} from "@src/app/top-panel/buttons/base.button";
+import {app} from "@src/app/app.controller";
 
 export const TopPanelView: FC<PropsWithChildren> = observer(({
                                                                  children,
                                                              }) => {
-    const app = useAppContext();
 
     return (
         <div className={styles.container}>
             <Logo/>
-            {
-                app.isReady && app.isInitSuccessful && !app.isAuthorized &&
-                <div ref={(node) => {
-                    if (!node) return;
-                    app.google!.accounts.id.initialize({
-                        client_id: process.env.GOOGLE_APP_ID!,
-                        callback: async ({credential}) =>
-                            authRequest(credential)
-                    });
+            <div>
 
-                    app.google!.accounts.id.renderButton(node, {
-                        type: 'icon',
-                    });
-
-                }}/>
-            }
-            {
-                children
-            }
+                {
+                    app.isAuthorized &&
+                    <BaseButton
+                        title={'Logout'}
+                        style={{
+                            ['--base_button_size']: '3em',
+                        }}>
+                        <BiLogOutCircle/>
+                    </BaseButton>
+                }
+            </div>
         </div>
     )
 });
+
+
+export type IDetailedHTMLProps<T extends HTMLElement> = DetailedHTMLProps<HTMLAttributes<T>, T>;
+export type IReactBtnProps = DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
 
 
 
