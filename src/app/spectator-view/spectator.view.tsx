@@ -1,54 +1,15 @@
-import {DetailedHTMLProps, FC, HTMLAttributes, useEffect, useRef, useState} from "react";
+import {DetailedHTMLProps, FC, HTMLAttributes, useState} from "react";
 import {observer} from "mobx-react-lite";
-import {app} from "@src/app/app.controller";
 import styles from './spectator.module.scss';
-import {FaPlay} from "react-icons/fa";
 import {IoColorPaletteSharp} from "react-icons/io5";
 import {RiHome3Line} from "react-icons/ri";
-
+import {ImExit} from "react-icons/im";
 import {cls} from "@src/app/app.view";
 import {GameController} from "@src/app/game/game.controller";
 import {isNonNegativeInteger} from "@fbltd/math";
-import {authRequest} from "@src/request/impl/auth.request";
-import {BaseButton} from "@src/app/top-panel/buttons/base.button";
 import {hexColorToNumber, isNotNullish, numberToColor} from "@src/app/spectator-view/utils";
-
-type ISpectatorTopMenu = {
-    onProceed: () => void;
-}
-export const SpectatorView: FC<ISpectatorTopMenu> = observer(({
-                                                                  onProceed,
-                                                              }) => {
-
-    const rendered = useRef(false);
-
-    return (
-        <div className={styles.fieldSheet}>
-            {
-                app.isReady && app.isInitSuccessful && !app.isAuthorized &&
-                <div className={cls(styles.googleContainer, 'flex_center')}
-                     ref={(node) => {
-                         if (!node) return;
-                         if (rendered.current) return;
-                         rendered.current = true;
-
-
-                         app.google!.accounts.id.initialize({
-                             client_id: process.env.GOOGLE_APP_ID!,
-                             callback: async ({credential}) =>
-                                 authRequest(credential)
-                         });
-
-                         app.google!.accounts.id.renderButton(node, {
-                             type: 'icon'
-                         });
-
-                     }}/>
-            }
-        </div>
-    )
-});
-
+import {useNavigate} from "react-router";
+import {BaseButton} from "@src/app/top-panel/buttons/base.button";
 
 export const FieldControls: FC<{ gameController: GameController }> = observer(({
                                                                                    gameController,
@@ -72,6 +33,7 @@ export const FieldControls: FC<{ gameController: GameController }> = observer(({
             }}>
                 <PaletteBtn active={active === 0} data-index={0} gameController={gameController}/>
                 <FitInBtn active={active === 1} data-index={1} gameController={gameController}/>
+                <ExitBtn active={active === 2} data-index={2} gameController={gameController}/>
             </div>
         </div>
     )
@@ -135,17 +97,34 @@ export const FitInBtn: FC<IPaletteBtn> = observer(({
                                                        ...props
                                                    }) => {
 
-    useEffect(() => {
-        gameController.goHome()
-    }, [active]);
+    return (
+        <BaseButton
+            onClick={() => gameController.goHome()}
+            className={cls(active && styles.activeToolBtn, className)}
+            {...props}>
+            <RiHome3Line/>
+        </BaseButton>
+    )
+});
+
+export const ExitBtn: FC<IPaletteBtn> = observer(({
+                                                      active,
+                                                      className,
+                                                      gameController,
+                                                      ...props
+                                                  }) => {
+
+    const navigate = useNavigate();
 
     return (
-        <>
-            <button className={cls(active && styles.activeToolBtn, className)}
-                    {...props}>
-                <RiHome3Line/>
-            </button>
-        </>
+        <BaseButton
+            onClick={() => navigate('/')}
+            className={cls(active && styles.activeToolBtn, className)}
+            {...props}>
+            <ImExit/>
+        </BaseButton>
     )
-})
+});
+
+
 

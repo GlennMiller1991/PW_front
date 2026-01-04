@@ -21,12 +21,14 @@ import {Quad} from "@src/app/game/quad";
 import {getScaleToPointMatrix} from "@src/app/game/getScaleToPointMatrix";
 import {GameStatusChanging} from "@src/app/game/gameStatusChanging";
 import {TouchTransformController} from "@src/app/game/events/touch/touch-transform.controller";
+import { NavigateFunction } from "react-router";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
 
 export class GameController {
     disposer = createFnStorage();
+    navigate: NavigateFunction;
 
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
@@ -112,9 +114,11 @@ export class GameController {
     }
 
 
-    async onDomMounted(canvas: HTMLCanvasElement) {
+    async onDomMounted(canvas: HTMLCanvasElement, navigate: NavigateFunction) {
         let {data} = await GET<IFieldSizesResponse>(ENDPOINTS.sizes);
         if (!data) return;
+
+        this.navigate = navigate;
 
         let bitmapResponse = await GET<ArrayBuffer>(ENDPOINTS.gameBitmap);
         if (!bitmapResponse.data) return;
@@ -280,6 +284,7 @@ export class GameController {
     dispose() {
         GlobalResizeObserver.unobserve(this.node);
         this.disposer.run();
+        this.gameStatusChanging.dispose();
     }
 }
 

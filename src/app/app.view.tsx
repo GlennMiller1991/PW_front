@@ -3,7 +3,8 @@ import {AppController} from "@src/app/app.controller";
 import {observer} from "mobx-react-lite";
 import {Loader} from "@src/app/opening/loader";
 import c from "classnames";
-import {AppLoaded} from "@src/app/app-loaded/app-loaded.view";
+import {Game, GameMenu} from "@src/app/app-loaded/app-loaded.view";
+import {Routes, Route} from "react-router";
 
 export const cls = c;
 
@@ -16,5 +17,11 @@ export const App = observer(() => {
     if (!controller.isInitSuccessful)
         return <Loader text={'ERROR'}/>
 
-    return <AppLoaded/>
+    return (
+        <Routes>
+            <Route path={"/"} element={<GameMenu/>}/>
+            <Route path={"/game"} element={<Game/>}/>
+            <Route path={"*"} element={null}/>
+        </Routes>
+    )
 });

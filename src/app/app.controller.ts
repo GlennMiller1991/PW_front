@@ -5,6 +5,8 @@ import {Token} from "@src/token/token";
 import {accessibilityRequest} from "@src/request/impl/accessibility.request";
 import {delay} from "@fbltd/async";
 import {FontCSSLoader} from "@src/app/opening/font-css-loader";
+import {GET} from "@src/request/request";
+import {ENDPOINTS} from "@src/request/constants";
 
 export const fonts = {
     pixel: {
@@ -104,7 +106,9 @@ export class AppController {
         this.isInitWas = true;
     }
 
-    logout() {
+    async logout() {
+        const {isOk} = await GET(ENDPOINTS.logout);
+        if (!isOk) return;
         this.jwt.token = undefined;
     }
 }

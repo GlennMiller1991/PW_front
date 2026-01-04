@@ -23,6 +23,8 @@ li {
 }
 
 li button {
+    width: 100%;
+    height: 100%;
     font-family: var(--font-family);
     font-weight: bold;
     font-size: 1em;
@@ -30,7 +32,7 @@ li button {
     color: currentColor;
 }
 
-li:has(> button:hover) {
+li:hover {
     color: lightgray;
 }
 
@@ -51,4 +53,23 @@ li > div {
 
 li:hover > div {
     opacity: 1
+}
+
+.loginServiceBtn {
+    width: 0.6em;
+    height: 0.6em;
+    background-size: contain;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: 300ms;
+}
+
+.loginServiceBtn > div {
+    inset: 0;
+    opacity: 0;
+    overflow: hidden;
+    cursor: pointer;
+    position: absolute;
 }

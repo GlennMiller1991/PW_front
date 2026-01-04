@@ -16,6 +16,9 @@ export const ENDPOINTS = {
     get accessibility() {
         return this.auth + '/accessibility';
     },
+    get logout() {
+        return this.auth + '/logout';
+    },
     // endregion Auth
 
     // region Game

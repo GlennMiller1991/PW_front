@@ -10,7 +10,8 @@
     "classnames": "^2.5.1",
     "mobx-react-lite": "^4.x.x",
     "react": "^19.x.x",
-    "react-dom": "^19.x.x"
+    "react-dom": "^19.x.x",
+    "react-router": "^7.11.0"
   },
   "devDependencies": {
     "@types/dotenv-webpack": "^7.0.8",
