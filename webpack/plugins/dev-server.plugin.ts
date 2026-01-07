@@ -24,4 +24,5 @@ export const devServer: DevServerConfiguration = {
     },
     allowedHosts: ["xn--b1add.xn----7sbanedmtdn2babzy.xn--p1ai"],
     port: 5000,
+    historyApiFallback: true
 };

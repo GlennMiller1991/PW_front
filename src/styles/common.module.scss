@@ -1,6 +1,6 @@
 @import 'templates.module';
 
-.container {
+.canvasContainer {
   height: 100%;
   margin: 0 max(72px, 10%);
   @include flexCenter(space-between);

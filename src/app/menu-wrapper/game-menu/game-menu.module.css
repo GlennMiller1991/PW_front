@@ -1,0 +1,84 @@
+.container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    font-size: 3rem;
+    flex-direction: column;
+}
+
+.canvasContainer {
+    position: fixed;
+    inset: 0;
+    font-size: 3rem;
+    flex-direction: column;
+}
+
+.menu {
+    width: max-content;
+    list-style: none;
+}
+
+.menu li {
+    position: relative;
+    transition: 300ms;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+li {
+    color: black;
+}
+
+li button {
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-family);
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    color: currentColor;
+}
+
+li:hover {
+    color: lightgray;
+}
+
+li:has(> button:active) {
+    color: #d8d8d8;
+}
+
+li:has(> button:disabled) {
+    pointer-events: none;
+    color: lightgray;
+    opacity: .6;
+}
+
+li > div {
+    opacity: 0;
+    filter: grayscale(1);
+}
+
+li:hover > div {
+    opacity: 1
+}
+
+.loginServiceBtn {
+    width: 0.6em;
+    height: 0.6em;
+    background-size: contain;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: 300ms;
+}
+
+.loginServiceBtn > div {
+    inset: 0;
+    opacity: 0;
+    overflow: hidden;
+    cursor: pointer;
+    position: absolute;
+}

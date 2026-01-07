@@ -8,6 +8,7 @@
     "@fbltd/math": "^1.x.x",
     "@types/react-icons": "^2.2.7",
     "classnames": "^2.5.1",
+    "history": "^5.3.0",
     "mobx-react-lite": "^4.x.x",
     "react": "^19.x.x",
     "react-dom": "^19.x.x",

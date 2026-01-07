@@ -1,0 +1,7 @@
+.activePalette {
+    position: absolute;
+    top: 100%;
+    outline: 1px solid gray;
+    pointer-events: all;
+    background: currentColor;
+}

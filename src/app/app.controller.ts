@@ -1,12 +1,13 @@
 import {makeAutoObservable} from 'mobx';
 import GoogleAuth from "@fbltd/google-auth";
-import {refreshRequest} from "@src/request/impl/refresh.request";
-import {Token} from "@src/token/token";
-import {accessibilityRequest} from "@src/request/impl/accessibility.request";
+import {refreshRequest} from "@src/infra/request/impl/refresh.request";
+import {Token} from "@src/infra/token/token";
+import {accessibilityRequest} from "@src/infra/request/impl/accessibility.request";
 import {delay} from "@fbltd/async";
-import {FontCSSLoader} from "@src/app/opening/font-css-loader";
-import {GET} from "@src/request/request";
-import {ENDPOINTS} from "@src/request/constants";
+import {FontCSSLoader} from "@src/app/_components/opening/font-css-loader";
+import {GET} from "@src/infra/request/request";
+import {ENDPOINTS} from "@src/infra/request/constants";
+import {router} from "@src/infra/router";
 
 export const fonts = {
     pixel: {
@@ -107,9 +108,10 @@ export class AppController {
     }
 
     async logout() {
-        const {isOk} = await GET(ENDPOINTS.logout);
-        if (!isOk) return;
+        GET(ENDPOINTS.logout);
+
         this.jwt.token = undefined;
+        router.goto('/');
     }
 }
 
