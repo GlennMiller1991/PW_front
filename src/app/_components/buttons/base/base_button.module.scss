@@ -8,3 +8,7 @@
     height: var(--calculated_size);
     width: var(--calculated_size);
 }
+
+.observability > * {
+  pointer-events: none;
+}

@@ -2,7 +2,7 @@ import {observer} from "mobx-react-lite";
 import styles from './game-menu.module.css';
 import {app, fonts} from "@src/app/app.controller";
 import {cls} from "@src/app/app.view";
-import {BaseButton} from "@src/app/_components/buttons/base.button";
+import {BaseButton} from "@src/app/_components/buttons/base/base.button";
 import {authRequest} from "@src/infra/request/impl/auth.request";
 import googleLogo from "@pic/google_px.webp";
 import {router} from "@src/infra/router";

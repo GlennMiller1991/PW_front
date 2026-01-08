@@ -4,17 +4,17 @@ import styles from './base_button.module.scss';
 import {IButtonDetailedProps} from "@src/infra/utils/type-utils";
 
 export const BaseButton: FC<IButtonDetailedProps> = memo(({
-                                                        children,
-                                                        className,
-                                                        ...rest
-                                                    }) => {
+                                                              children,
+                                                              className,
+                                                              ...rest
+                                                          }) => {
 
     return (
-        <button
-            className={cls(
+        <button className={cls(
             'flex_center',
             styles.styling,
             styles.sizing,
+            styles.observability,
             className,
         )}
                 {...rest}>
@@ -23,4 +23,5 @@ export const BaseButton: FC<IButtonDetailedProps> = memo(({
             }
         </button>
     )
-})
+});
+

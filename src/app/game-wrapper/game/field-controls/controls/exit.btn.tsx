@@ -1,6 +1,6 @@
 import {FC} from "react";
 import {observer} from "mobx-react-lite";
-import {BaseButton} from "@src/app/_components/buttons/base.button";
+import {BaseButton} from "@src/app/_components/buttons/base/base.button";
 import {app} from "@src/app/app.controller";
 import {cls} from "@src/app/app.view";
 import styles from "@src/app/game-wrapper/game/field-controls/field-control.module.css";

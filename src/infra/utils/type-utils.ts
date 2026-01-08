@@ -1,4 +1,4 @@
-import {DetailedHTMLProps, HTMLAttributes} from "react";
+import {ButtonHTMLAttributes, DetailedHTMLProps, HTMLAttributes} from "react";
 
 export type IExclusiveUnion<TFirst extends {}, TSecond extends {}> = ({
     [Key in keyof TFirst]?: never
@@ -7,7 +7,8 @@ export type IExclusiveUnion<TFirst extends {}, TSecond extends {}> = ({
 } & TFirst);
 
 export type IDivDetailedProps = DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-export type IButtonDetailedProps = DetailedHTMLProps<HTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
+export type IButtonDetailedProps = DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
+
 export type INullable = undefined | null;
 export type IFalsifiable = INullable | false;
 export type IFailure = IFalsifiable;

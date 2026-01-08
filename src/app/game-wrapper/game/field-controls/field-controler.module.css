@@ -36,10 +36,6 @@
     transition: 300ms ease-in-out;
 }
 
-.topPanel > button * {
-    pointer-events: none;
-}
-
 .topPanel > button:hover {
     background: var(--btnBackgroundHover);
 }
