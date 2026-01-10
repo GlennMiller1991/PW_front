@@ -21,6 +21,7 @@ import {getScaleToPointMatrix} from "@src/infra/utils/get-scale-to-point-matrix"
 import {TouchTransformController} from "@src/infra/events/touch/touch-transform.controller";
 import {GameLogic} from "@src/app/game-wrapper/game/controller/game-logic";
 import {ILinearSizes} from "@src/infra/utils/type-utils";
+import {Dependency} from "@fbltd/async";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -31,7 +32,7 @@ export class GameController {
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
     clicker: Clicker;
-    currentColor: number = 255;
+    currentColor = new Dependency(255);
 
     httpPixelSource = new HttpPixelSource();
     _firstRenderWas = false;

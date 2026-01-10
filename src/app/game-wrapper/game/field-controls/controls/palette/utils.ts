@@ -5,6 +5,8 @@ export function numberToColor(n: number): string {
         .padStart(6, '0');
 }
 
+
+
 export function isValidHexColor(c: string) {
     const regexps = [
         new RegExp(/^#[0-9a-f]{3}$/),

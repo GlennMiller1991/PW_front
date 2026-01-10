@@ -1,4 +1,4 @@
-import {IButtonDetailedProps, IExclusiveUnion} from "@src/infra/utils/type-utils";
+import {IButtonDetailedProps} from "@src/infra/utils/type-utils";
 import {FC, MouseEvent, FocusEvent, memo, JSX, CSSProperties, useMemo, useEffect, useCallback} from "react";
 import {useFlag} from "@src/infra/flag/useFlag";
 import {BaseButton} from "@src/app/_components/buttons/base/base.button";
@@ -8,18 +8,17 @@ import {cls} from "@src/app/app.view";
 
 type IRectPosition = 'left' | 'top' | 'right' | 'bottom' | 'leftTop' | 'rightTop' | 'leftBottom' | 'rightBottom';
 
-type IStatingButton = IButtonDetailedProps & IExclusiveUnion<{ enabledContent: JSX.Element }, {
-    disabledContent: JSX.Element
-}> & {
-    contentPosition?: IRectPosition;
-}
+type IStatingButton = IButtonDetailedProps &
+    {
+        enabledContent: JSX.Element
+        contentPosition?: IRectPosition;
+    }
 
 export const StatingButton: FC<IStatingButton> = memo(({
                                                            onBlur,
                                                            onFocus,
                                                            onMouseDown,
                                                            enabledContent,
-                                                           disabledContent,
                                                            children,
                                                            contentPosition = 'leftTop',
                                                            style = {},
@@ -42,7 +41,7 @@ export const StatingButton: FC<IStatingButton> = memo(({
     const onFocusMemoized = useMemo(() => {
         return debounce((e: FocusEvent<HTMLButtonElement>) => {
             onBlurMemoized.dispose();
-            if (e.currentTarget && e.target !== e.currentTarget ) return;
+            if (e.currentTarget && e.target !== e.currentTarget) return;
 
             onFocus?.(e);
             flag.on();
@@ -92,13 +91,8 @@ export const StatingButton: FC<IStatingButton> = memo(({
              style={calculateCssPosition(contentPosition)}
         >
             {
-                flag.state &&
+                // flag.state &&
                 enabledContent
-            }
-
-            {
-                !flag.state &&
-                disabledContent
             }
         </div>
 
