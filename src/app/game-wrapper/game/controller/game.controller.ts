@@ -32,7 +32,7 @@ export class GameController {
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
     clicker: Clicker;
-    currentColor = new Dependency(255);
+    currentColor = new Dependency(0xab9468);
 
     httpPixelSource = new HttpPixelSource();
     _firstRenderWas = false;
