@@ -1,9 +1,9 @@
-import {FC, useEffect, useState} from "react";
+import {FC, useState} from "react";
 import paletteStyles from './palette.module.css';
 import {IoColorPaletteSharp} from "react-icons/io5";
 import {IFieldControlBaseProps} from "@src/app/game-wrapper/game/field-controls/contracts";
 import {StatingButton} from "@src/app/_components/buttons/stating/stating.button";
-import {blend, clamp, Color, COLORS, LinearGradient, normalize, normalizeShade} from "@fbltd/math";
+import {blend, clamp, Color, COLORS, IPoint2, LinearGradient, normalize} from "@fbltd/math";
 import {Reactive} from "@fbltd/async";
 import {GameController} from "@src/app/game-wrapper/game/controller/game.controller";
 import {DragMouseController} from "@src/infra/events/drag/dragMouseController";
@@ -17,54 +17,7 @@ export const PaletteBtn: FC<IFieldControlBaseProps> = Reactive(({
 
     const [controller] = useState(() => new PaletteBtnController(gameController));
 
-    const c = Color.ofNumber(controller.currentColor.value);
-
-    const maxShade = Math.max(c.red, c.green, c.blue);
-    const minShade = Math.min(c.red, c.green, c.blue);
-
-    const x = normalizeShade(minShade);
-    const y = normalizeShade(maxShade);
-
-    const stopColor = new Color(0, 0, 0, 1);
-    if (c.red === c.green && c.red === c.blue) {
-        stopColor.red = 0xff;
-        stopColor.green = stopColor.blue = 0x00;
-    } else {
-        if (c.red === maxShade) {
-            stopColor.red = 0xff;
-        }
-
-        if (c.green === maxShade) {
-            stopColor.green = 0xff;
-        }
-
-        if (c.blue === maxShade) {
-            stopColor.blue = 0xff;
-        }
-
-        for (let key of ['red', 'green', 'blue'] as const) {
-            if (c[key] !== maxShade && c[key] !== minShade) {
-
-                // Восстановленная компонента цвета
-                let restoredShade: number;
-
-                // Восстанавливаю серый оттенок на этом y
-                restoredShade = LinearGradient.restoreColor(COLORS.WHITE, COLORS.BLACK, 1 - y)[key];
-
-                // экстраполирую до правой границы градиента
-                restoredShade = restoredShade + (c[key] - restoredShade) / (1 - x);
-
-                // привожу к формату rgb
-                restoredShade = Math.floor(restoredShade);
-
-                // экстраполирую до верхней границы градиента
-                restoredShade = Math.floor(restoredShade / y);
-
-                stopColor[key] = restoredShade;
-                break;
-            }
-        }
-    }
+    const {color, tendency: {stopColor, point: [x, y]}} = controller.currentColor.value;
 
 
     let mainX = controller.main.getPercentageByColor(stopColor)!;
@@ -82,21 +35,32 @@ export const PaletteBtn: FC<IFieldControlBaseProps> = Reactive(({
                         const dragger = new DragMouseController(node, {withDraggingOnItself: false});
                         const rect = node.getBoundingClientRect();
 
-                        autorun(() => {
-                            const e = dragger.proceed?.data?.currentPoint ?? dragger.start?.data?.startPoint;
-                            if (!e) return;
-
+                        function eProcess(e: IPoint2) {
                             e[0] = clamp(normalize(e[0], rect.right, rect.left));
                             e[1] = clamp(normalize(e[1], rect.bottom, rect.top));
 
+                            const v = gameController.currentColor.value;
+                            const color = blend(v.tendency.stopColor, controller.wtt.getColorAtPercentage(e[0])!, controller.ttb.getColorAtPercentage(e[1])!);
 
-                            const c = blend(stopColor, controller.wtt.getColorAtPercentage(e[0])!, controller.ttb.getColorAtPercentage(e[1])!);
+                            gameController.currentColor.value = {
+                                color,
+                                tendency: {
+                                    stopColor: v.tendency.stopColor,
+                                    point: e,
+                                }
+                            };
+                        }
 
-                            gameController.currentColor.value = c.toNumber();
+                        autorun(() => {
+                            const e = dragger.proceed?.data?.currentPoint;
+                            if (e) eProcess(e);
+                        });
 
-                        })
+                        autorun(() => {
+                            const e = dragger.start?.data?.startPoint;
+                            if (e) eProcess(e);
+                        });
                     }}
-
                     style={{
                         width: 100, height: 100,
                         position: 'relative',
@@ -104,12 +68,12 @@ export const PaletteBtn: FC<IFieldControlBaseProps> = Reactive(({
                     }}>
                     <div style={{
                         position: 'absolute',
-                        right: `${x * 100}%`,
-                        bottom: `${y * 100}%`,
-                        background: c.toString(),
-                        transform: 'translate(-50%, 50%)',
-                        width: 20,
-                        height: 20,
+                        left: `${x * 100}%`,
+                        top: `${y * 100}%`,
+                        background: color.toString(),
+                        transform: 'translate(-50%, -50%)',
+                        width: 12,
+                        height: 12,
                         outline: '2px solid white',
                         borderRadius: '50%',
                         pointerEvents: 'none',
@@ -117,22 +81,58 @@ export const PaletteBtn: FC<IFieldControlBaseProps> = Reactive(({
                 </div>
 
 
-                <div style={{
-                    width: 100,
-                    height: 7,
-                    position: 'relative',
-                    background: controller.main.toCSS('to left'),
-                }}>
+                <div
+                    ref={(node) => {
+                        if (!node) return;
+                        if (isRendered2) return;
+                        isRendered2 = true;
+                        const dragger = new DragMouseController(node, {withDraggingOnItself: false});
+                        const rect = node.getBoundingClientRect();
+
+                        function eProcess(e: IPoint2) {
+                            const x = clamp(normalize(e[0], rect.right, rect.left), 0, 0.99);
+
+                            const c = controller.main.getColorAtPercentage(x);
+                            if (!c) return;
+
+                            const v = gameController.currentColor.value;
+                            const point = v.tendency.point;
+                            const color = blend(c, controller.wtt.getColorAtPercentage(point[0])!, controller.ttb.getColorAtPercentage(point[1])!);
+                            gameController.currentColor.value = {
+                                color,
+                                tendency: {
+                                    stopColor: c,
+                                    point: v.tendency.point,
+                                }
+                            };
+                        }
+
+                        autorun(() => {
+                            const e = dragger.proceed?.data?.currentPoint;
+                            if (e) eProcess(e);
+                        });
+
+                        autorun(() => {
+                            const e = dragger.start?.data?.startPoint;
+                            if (e) eProcess(e);
+                        })
+                    }}
+                    style={{
+                        width: 100,
+                        height: 7,
+                        position: 'relative',
+                        background: controller.main.toCSS('to right'),
+                    }}>
                     <div style={{
                         position: 'absolute',
                         left: `${mainX * 100}%`,
                         top: '50%',
                         background: stopColor.toString(),
                         transform: 'translate(-50%, -50%)',
-                        width: 20,
-                        height: 20,
+                        width: 10,
+                        height: 16,
                         outline: '2px solid white',
-                        borderRadius: '50%',
+                        borderRadius: 5,
                         pointerEvents: 'none',
                     }}/>
                 </div>
@@ -164,13 +164,12 @@ export class PaletteBtnController {
 
     readonly main = new LinearGradient(
         {percentage: 0, color: new Color(255, 0, 0, 1)},
-        {percentage: 1 / 7, color: new Color(255, 255, 0, 1)},
-        {percentage: 2 / 7, color: new Color(0, 255, 0, 1)},
-        {percentage: 3 / 7, color: new Color(0, 255, 0, 1)},
-        {percentage: 4 / 7, color: new Color(0, 255, 255, 1)},
-        {percentage: 5 / 7, color: new Color(0, 0, 255, 1)},
-        {percentage: 6 / 7, color: new Color(255, 0, 255, 1)},
-        {percentage: 1, color: new Color(255, 0, 0, 1)},
+        {percentage: 1 / 6, color: new Color(255, 255, 0, 1)},
+        {percentage: 2 / 6, color: new Color(0, 255, 0, 1)},
+        {percentage: 3 / 6, color: new Color(0, 255, 255, 1)},
+        {percentage: 4 / 6, color: new Color(0, 0, 255, 1)},
+        {percentage: 5 / 6, color: new Color(255, 0, 255, 1)},
+        {percentage: 6 / 6, color: new Color(255, 0, 0, 1)},
     );
 
     constructor(private readonly gameController: GameController) {
@@ -184,3 +183,4 @@ export class PaletteBtnController {
 }
 
 let isRendered = false;
+let isRendered2 = false;

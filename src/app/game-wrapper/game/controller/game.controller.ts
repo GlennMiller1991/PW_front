@@ -7,7 +7,7 @@ import vertex from "@src/app/game-wrapper/game/controller/shaders/vertex.glsl";
 import fragment from "@src/app/game-wrapper/game/controller/shaders/fragment.glsl";
 import {GlobalResizeObserver, IResizeCallback} from "@src/infra/resize.handler";
 import {CanvasDomControllerGl} from "@src/infra/dom/canvas.dom-controller";
-import {identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d, Point} from "@fbltd/math";
+import {Color, identityMatrix2d, IMatrix2d, IPoint, IPoint2, Matrix2d, Point} from "@fbltd/math";
 import {DragMouseController} from "@src/infra/events/drag/dragMouseController";
 import {autorun, makeObservable} from "mobx";
 import {WsConnection} from "@src/infra/ws/ws.controller";
@@ -23,6 +23,8 @@ import {GameLogic} from "@src/app/game-wrapper/game/controller/game-logic";
 import {ILinearSizes} from "@src/infra/utils/type-utils";
 import {Dependency} from "@fbltd/async";
 
+import {getColorTendency} from "@src/app/game-wrapper/game/field-controls/controls/palette/get-color-tendency";
+
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
 
@@ -32,7 +34,10 @@ export class GameController {
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
     clicker: Clicker;
-    currentColor = new Dependency(0xab9468);
+    currentColor = new Dependency({
+        color: Color.ofNumber(0xab9468),
+        tendency: getColorTendency(Color.ofNumber(0xac9468)),
+    });
 
     httpPixelSource = new HttpPixelSource();
     _firstRenderWas = false;
@@ -235,7 +240,7 @@ export class GameController {
         let center: IPoint = [sizes.width / 2, sizes.height / 2];
 
         // От центра в любое из направлений
-        const coords =  Quad.ofCenter(center, min);
+        const coords = Quad.ofCenter(center, min);
 
         const resolution = fieldSize / min;
 
