@@ -34,5 +34,9 @@ export class Flag {
         this._state.value = !this._state.value;
     }
 
+    setState(v: boolean) {
+        this._state.value = v;
+    }
+
 }
 

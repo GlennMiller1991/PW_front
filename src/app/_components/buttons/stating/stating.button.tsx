@@ -1,33 +1,27 @@
 import {IButtonDetailedProps} from "@src/infra/utils/type-utils";
-import {FC, MouseEvent, FocusEvent, memo, JSX, CSSProperties, useMemo, useEffect, useCallback} from "react";
+import {FC, MouseEvent, FocusEvent, memo, CSSProperties, useMemo, useEffect, useCallback} from "react";
 import {useFlag} from "@src/infra/flag/useFlag";
 import {BaseButton} from "@src/app/_components/buttons/base/base.button";
 import styles from './stating-button.module.css';
 import {debounce} from "@fbltd/async";
 import {cls} from "@src/app/app.view";
+import {useFlagContext} from "@src/app/game-wrapper/game/field-controls/controls/palette/popover";
 
-type IRectPosition = 'left' | 'top' | 'right' | 'bottom' | 'leftTop' | 'rightTop' | 'leftBottom' | 'rightBottom';
+export type IRectPosition = 'left' | 'top' | 'right' | 'bottom' | 'leftTop' | 'rightTop' | 'leftBottom' | 'rightBottom';
 
-type IStatingButton = IButtonDetailedProps &
-    {
-        enabledContent: JSX.Element | (() => JSX.Element);
-        contentPosition?: IRectPosition;
-
-        onStateChange?: (state: boolean) => void;
-    }
+type IStatingButton = IButtonDetailedProps
 
 export const StatingButton: FC<IStatingButton> = memo(({
                                                            onBlur,
                                                            onFocus,
                                                            onMouseDown,
-                                                           enabledContent,
-                                                           onStateChange,
                                                            children,
-                                                           contentPosition = 'leftTop',
                                                            style = {},
                                                            className,
                                                            ...props
                                                        }) => {
+
+    const outerObserver = useFlagContext();
     const {flag} = useFlag();
     let position = style.position ?? 'relative';
     if (position === 'static')
@@ -64,7 +58,7 @@ export const StatingButton: FC<IStatingButton> = memo(({
     useEffect(() => onBlurMemoized.dispose, []);
 
     useEffect(() => {
-        onStateChange?.(flag.state);
+        outerObserver.setState(flag.state);
     }, [flag.state]);
 
     return <BaseButton
@@ -93,23 +87,10 @@ export const StatingButton: FC<IStatingButton> = memo(({
         {
             children
         }
-
-        <div className={styles.statingButton}
-             style={calculateCssPosition(contentPosition)}
-        >
-            {
-                flag.state &&
-                (typeof enabledContent === 'function' ?
-                    enabledContent() :
-                    enabledContent)
-            }
-        </div>
-
-
     </BaseButton>
 });
 
-function calculateCssPosition(pos: IRectPosition): CSSProperties {
+export function calculateCssPosition(pos: IRectPosition): CSSProperties {
     const styles: CSSProperties = {};
     pos = pos.toLowerCase() as typeof pos;
     const isLeft = pos.indexOf('left') !== -1;
