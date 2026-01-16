@@ -26,23 +26,27 @@ export class Clicker {
         if (this._isLoading) return;
         if (event.target !== event.currentTarget) return;
 
-        this.abortController = new AbortController();
-        const signal = this.abortController.signal;
-        this._isLoading = true;
-        let p: IPoint2 = [event.offsetX, event.offsetY];
+        try {
+            this.abortController = new AbortController();
+            const signal = this.abortController.signal;
+            this._isLoading = true;
+            let p: IPoint2 = [event.offsetX, event.offsetY];
 
-        const converter = this.gameController.pixelToFieldConverter;
+            const converter = this.gameController.pixelToFieldConverter;
 
-        p = converter(p) as IPoint2;
-        if (!p) return;
+            p = converter(p) as IPoint2;
+            if (!p) return;
 
-        await POST(ENDPOINTS.gameSet, {
-            point: p,
-            color: this.gameController.currentColor,
-        }, {signal});
+            await POST(ENDPOINTS.gameSet, {
+                point: p,
+                color: this.gameController.currentColor.toNumber(),
+            }, {signal});
 
-        this.abortController = undefined;
-        this._isLoading = false;
+        } finally {
+            this.abortController = undefined;
+            this._isLoading = false;
+        }
+
     }
 
     dispose() {

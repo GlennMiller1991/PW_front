@@ -6,9 +6,16 @@ import {
     ITouchEventStop,
     TouchEventProceed, TouchEventStart
 } from "@src/infra/events/touch/contracts";
+import {isNotNullish} from "@src/infra/utils/type-guards";
+import {isNatural} from "@fbltd/math";
+
+export type ITouchTransformConfig = {
+    touchesQty: number
+}
 
 export class TouchTransformController extends UiEventController<Required<ITouchEventStart>, Required<ITouchEventProceed>, ITouchEventStop> {
     private _prevProceed: TouchEventProceed | undefined;
+    private config: ITouchTransformConfig;
 
     /**
      * @private
@@ -37,8 +44,12 @@ export class TouchTransformController extends UiEventController<Required<ITouchE
         return this._stop;
     }
 
-    constructor(node: EventTarget) {
+    constructor(node: EventTarget, config: Partial<ITouchTransformConfig> = {}) {
         super(node);
+
+        this.config = {
+            touchesQty: (config.touchesQty && isNatural(config.touchesQty)) ? config.touchesQty : Infinity,
+        }
 
         this.init();
 
@@ -54,7 +65,10 @@ export class TouchTransformController extends UiEventController<Required<ITouchE
     stopEvents = ['touchstart', 'touchend', 'touchcancel',];
 
     isProcessCanBeStarted(event: Required<ITouchEventStart>["native"]) {
-        return event.targetTouches.length > 0;
+        if (event.targetTouches.length <= 0) return false;
+        if (event.targetTouches.length >= this.config.touchesQty) return false;
+
+        return true;
     }
 
     onStartImpl(native: ITouchEventProceed["native"]) {

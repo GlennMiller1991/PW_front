@@ -10,8 +10,10 @@ type IRectPosition = 'left' | 'top' | 'right' | 'bottom' | 'leftTop' | 'rightTop
 
 type IStatingButton = IButtonDetailedProps &
     {
-        enabledContent: JSX.Element
+        enabledContent: JSX.Element | (() => JSX.Element);
         contentPosition?: IRectPosition;
+
+        onStateChange?: (state: boolean) => void;
     }
 
 export const StatingButton: FC<IStatingButton> = memo(({
@@ -19,6 +21,7 @@ export const StatingButton: FC<IStatingButton> = memo(({
                                                            onFocus,
                                                            onMouseDown,
                                                            enabledContent,
+                                                           onStateChange,
                                                            children,
                                                            contentPosition = 'leftTop',
                                                            style = {},
@@ -60,6 +63,10 @@ export const StatingButton: FC<IStatingButton> = memo(({
 
     useEffect(() => onBlurMemoized.dispose, []);
 
+    useEffect(() => {
+        onStateChange?.(flag.state);
+    }, [flag.state]);
+
     return <BaseButton
         className={cls(styles.active, className)}
         style={{
@@ -91,8 +98,10 @@ export const StatingButton: FC<IStatingButton> = memo(({
              style={calculateCssPosition(contentPosition)}
         >
             {
-                // flag.state &&
-                enabledContent
+                flag.state &&
+                (typeof enabledContent === 'function' ?
+                    enabledContent() :
+                    enabledContent)
             }
         </div>
 

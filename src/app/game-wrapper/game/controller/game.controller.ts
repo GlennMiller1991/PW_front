@@ -21,9 +21,6 @@ import {getScaleToPointMatrix} from "@src/infra/utils/get-scale-to-point-matrix"
 import {TouchTransformController} from "@src/infra/events/touch/touch-transform.controller";
 import {GameLogic} from "@src/app/game-wrapper/game/controller/game-logic";
 import {ILinearSizes} from "@src/infra/utils/type-utils";
-import {Dependency} from "@fbltd/async";
-
-import {getColorTendency} from "@src/app/game-wrapper/game/field-controls/controls/palette/get-color-tendency";
 
 export const Matrix = Matrix2d;
 export type IMatrix = IMatrix2d;
@@ -34,10 +31,7 @@ export class GameController {
     node: HTMLDivElement;
     canvas: CanvasDomControllerGl;
     clicker: Clicker;
-    currentColor = new Dependency({
-        color: Color.ofNumber(0xab9468),
-        tendency: getColorTendency(Color.ofNumber(0xac9468)),
-    });
+    currentColor = Color.ofNumber(0xab9468);
 
     httpPixelSource = new HttpPixelSource();
     _firstRenderWas = false;
@@ -307,11 +301,22 @@ let spaceToCNDC: IMatrix = [2, 0, 0, -2, -1, 1];
 
 export function createFnStorage() {
     let arr: Array<Function> = [];
-    return {
-        push: arr.push,
-        run() {
-            arr.forEach(f => f());
-            arr.length = 0;
-        }
+
+    function run() {
+        arr.forEach(f => f());
+        arr.length = 0;
     }
+    interface IDisposer {
+        (): void,
+        push(...fn: Function[]): void,
+        run(): void
+    }
+    let disposer = (() => {
+        run()
+    }) as unknown as IDisposer;
+
+    disposer.run = run;
+    disposer.push = (...fn: Function[]) => arr.push(...fn);
+
+    return disposer;
 }
