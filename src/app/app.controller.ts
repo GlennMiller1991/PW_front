@@ -25,6 +25,15 @@ export class AppController {
     private _isServerAccessible = false;
     private _isInitWas = false;
     private _fatalError = false;
+    private _device: {
+        isMobile: boolean;
+    }
+
+    get device(): Readonly<typeof this._device> {
+        return this._device;
+    }
+
+
     public readonly fontLoader = new FontCSSLoader();
 
     set isInitWas(value: boolean) {
@@ -78,6 +87,10 @@ export class AppController {
 
     async init() {
         let time = Date.now();
+        this._device = {
+            isMobile: navigator.maxTouchPoints > 1
+        };
+
         this.isServerAccessible = await accessibilityRequest();
         if (this._isServerAccessible) {
             const auth = refreshRequest;

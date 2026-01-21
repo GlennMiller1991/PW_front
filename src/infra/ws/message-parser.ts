@@ -3,7 +3,7 @@ import {
     IMessage,
     IPixelSettingMessage,
     IStatusChangeMessage,
-    MessageRoom
+    MessageRoom, IClearBitmapMessage
 } from "@src/infra/ws/contracts";
 
 export class MessageParser {
@@ -34,6 +34,7 @@ export class MessageParser {
                     };
                     switch (type) {
                         case GameMessageType.StatusChange:
+                        case GameMessageType.ClearBitmap:
                             return msg;
                         case GameMessageType.PixelSetting:
                             const l = raw.byteLength;
@@ -105,5 +106,9 @@ export class MessageParser {
 
     static isLogoutMessage(msg: IMessage<any, any>): msg is ILogoutMessage {
         return this.isAppMessage(msg) && msg.data === AppMessageType.Logout;
+    }
+
+    static isClearBitmapMessage(msg: IMessage<any, any>): msg is IClearBitmapMessage {
+        return this.isGameMessage(msg) && msg.data?.type === GameMessageType.ClearBitmap;
     }
 }

@@ -7,7 +7,7 @@ export enum GameMessageType {
     StatusChange = 1,
     PixelSetting = 2,
     BitmapSetting = 3,
-    FullBitmap = 4,
+    ClearBitmap = 4,
 }
 
 export type IMessage<TRoom extends MessageRoom = MessageRoom, T = never> = {
@@ -24,6 +24,8 @@ export type IStatusChangeMessage = IMessage<
     MessageRoom.Game,
     IGameMessage<GameMessageType.StatusChange>
 >
+
+export type IClearBitmapMessage = IMessage<MessageRoom.Game, IGameMessage<GameMessageType.ClearBitmap>>;
 
 export type IPixelSettingMessage = IMessage<
     MessageRoom.Game,

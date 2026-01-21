@@ -2,6 +2,19 @@
     position: relative;
     width: 100%;
     height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobileContainer {
+    @media (orientation: portrait) {
+        flex-direction: column;
+    }
+
+    @media (orientation: landscape) {
+        flex-direction: row;
+    }
 }
 
 .canvasContainer {
@@ -9,4 +22,34 @@
     inset: 0;
     font-size: 3rem;
     flex-direction: column;
+    overflow: hidden;
+}
+
+.mobileContainer .canvasContainer {
+    position: relative;
+    flex-grow: 1;
+}
+
+.controls {
+    z-index: 1;
+}
+
+.controlsDesktop {
+    width: 20%;
+}
+
+.controlsMobile {
+    background: white !important;
+
+    @media (orientation: portrait) {
+        width: 100%;
+    }
+
+    @media (orientation: landscape) {
+        width: 30%;
+    }
+}
+
+.mobile {
+    background: white;
 }

@@ -56,6 +56,9 @@ export class GameLogic {
     async onMessage() {
         for await (let {unhandledMessages} of this._stream) {
             for (let msg of unhandledMessages) {
+                if (MessageParser.isClearBitmapMessage(msg)) {
+                    await this.updateBitmap();
+                }
 
                 if (MessageParser.isLogoutMessage(msg)) {
                     app.logout();

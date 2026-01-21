@@ -1,5 +1,6 @@
 import {IUiEventProceed, IUiEventStart, IUiEventStop} from "@src/infra/events/base/contracts";
 import {centroid, IPoint2, Point} from "@fbltd/math";
+import {roundPoint} from "@src/infra/utils/utils";
 
 export type ITouchEventStart = IUiEventStart<TouchEvent, {
     virtual: TouchEventStart,

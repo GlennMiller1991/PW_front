@@ -1,5 +1,5 @@
 #version 300 es
-precision lowp float;
+precision highp float;
 
 in vec2 a_position;
 in vec2 a_texCoord;

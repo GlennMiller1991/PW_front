@@ -1,20 +1,12 @@
-import {FC, memo, useEffect, useRef, useState} from "react";
-import {Dependency, useRaceStream} from "@fbltd/async";
-import paletteStyles from "@src/app/game-wrapper/game/field-controls/controls/palette/palette.module.css";
-import {blend, clamp, Color, COLORS, IPoint2, LinearGradient, normalize} from "@fbltd/math";
 import {createFnStorage} from "@src/app/game-wrapper/game/controller/game.controller";
 import {TouchTransformController} from "@src/infra/events/touch/touch-transform.controller";
 import {DragMouseController} from "@src/infra/events/drag/dragMouseController";
-import {getColorTendency} from "@src/app/game-wrapper/game/field-controls/controls/palette/get-color-tendency";
+import {blend, clamp, Color, COLORS, IPoint2, LinearGradient, normalize} from "@fbltd/math";
+import {Dependency} from "@fbltd/async";
+import {getColorTendency} from "@src/app/_components/color-input/get-color-tendency";
 import {autorun} from "mobx";
 
-type IColorInput = {
-    value?: Color;
-    initialValue: Color;
-    onChange: (color: Color) => void;
-}
-
-export class PaletteBtnController {
+export class ColorInputController {
     private disposer = createFnStorage();
     private node: HTMLDivElement;
     private shadeEvents: {
@@ -173,88 +165,3 @@ export class PaletteBtnController {
 
 
 }
-
-export const ColorInput: FC<IColorInput> = memo(({
-                                                     value,
-                                                     initialValue,
-                                                     onChange,
-                                                 }) => {
-    const ref = useRef<HTMLDivElement | null>(null);
-    const [controller] = useState(() => new PaletteBtnController(onChange, initialValue));
-
-    const {
-        value: {
-            colorDep: {
-                color,
-                tendency: {stopColor, point: [x, y]}
-            }
-        }
-    } = useRaceStream({colorDep: controller.currentColor});
-
-    const stopPercentage = controller.main.getPercentageByColor(stopColor) ?? 0;
-
-
-    useEffect(() => {
-        controller.setOnChange(undefined);
-        value && controller.setColor(value);
-        controller.setOnChange(onChange);
-    }, [onChange, value]);
-
-    useEffect(() => {
-        if (ref.current) {
-            controller.onContainerMount(ref.current);
-        }
-
-        return () => controller.dispose();
-    }, []);
-    return (
-        <div className={paletteStyles.popover}>
-            <div className={paletteStyles.palette}
-                 ref={ref}>
-                <div style={{
-                    width: 100, height: 100,
-                    position: 'relative',
-                    background: `${controller.ttb.toCSS()}, ${controller.wtt.toCSS('to right')}, ${stopColor}`,
-                }}>
-                    <div style={{
-                        position: 'absolute',
-                        left: `${x * 100}%`,
-                        top: `${y * 100}%`,
-                        background: color.toString(),
-                        transform: 'translate(-50%, -50%)',
-                        width: 12,
-                        height: 12,
-                        outline: '2px solid white',
-                        borderRadius: '50%',
-                        pointerEvents: 'none',
-                    }}/>
-                </div>
-
-
-                <div style={{
-                    width: 100,
-                    height: 7,
-                    position: 'relative',
-                    background: controller.main.toCSS('to right'),
-                }}>
-                    <div style={{
-                        position: 'absolute',
-                        left: `${stopPercentage * 100}%`,
-                        top: '50%',
-                        background: stopColor.toString(),
-                        transform: 'translate(-50%, -50%)',
-                        width: 10,
-                        height: 16,
-                        outline: '2px solid white',
-                        borderRadius: 5,
-                        pointerEvents: 'none',
-                    }}/>
-                </div>
-            </div>
-        </div>
-    )
-}, (prev, next) => {
-    if (!prev.value && !next.value) return true;
-    if (!prev.value || !next.value) return false;
-    return prev.value.isEqual(next.value);
-});

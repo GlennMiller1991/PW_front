@@ -66,7 +66,7 @@ export class TouchTransformController extends UiEventController<Required<ITouchE
 
     isProcessCanBeStarted(event: Required<ITouchEventStart>["native"]) {
         if (event.targetTouches.length <= 0) return false;
-        if (event.targetTouches.length >= this.config.touchesQty) return false;
+        if (event.targetTouches.length > this.config.touchesQty) return false;
 
         return true;
     }

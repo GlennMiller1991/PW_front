@@ -9,6 +9,10 @@
     width: var(--calculated_size);
 }
 
+.observability {
+  pointer-events: all;
+}
+
 .observability > * {
   pointer-events: none;
 }

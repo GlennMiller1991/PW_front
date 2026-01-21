@@ -1,0 +1,30 @@
+.toolPanel {
+    position: static;
+    background: transparent;
+    gap: 10px;
+    display: grid;
+    grid-template-rows: max-content 1fr;
+    pointer-events: none;
+}
+
+.btnContainer {
+    display: flex;
+    flex-wrap: nowrap;
+    --btnBackground: white;
+    gap: 10px;
+    margin: 10px 10px 0;
+}
+
+.topPanelBtn {
+    --base_button_size: 30px;
+    outline: 1px solid black !important;
+    pointer-events: all;
+    cursor: pointer;
+    border: 1px solid gray;
+    background: var(--btnBackground);
+    transition: 300ms ease-in-out;
+}
+
+.topPanelBtn:hover {
+    background: rgb(200, 200, 200);
+}

@@ -57,10 +57,12 @@ export class GameController {
         return Matrix.multiply(this.pixelToField, this.transformMatrix);
     }
 
-    pixelToFieldConverter = (p: IPoint2) => {
+    pixelToFieldConverter = (p: IPoint2, safe: boolean = true) => {
         p = Matrix.apply(this.pixelToFieldTransformed, p);
         p = floorPoint(p);
-        if (p[0] < 0 || p[1] < 0 || p[0] >= this.field.width || p[1] >= this.field.height) return;
+        if (safe) {
+            if (p[0] < 0 || p[1] < 0 || p[0] >= this.field.width || p[1] >= this.field.height) return;
+        }
         return p;
     }
 
@@ -71,9 +73,9 @@ export class GameController {
      * Матрица из нормализованных координат в пиксельные
      */
     spaceToPixel = identityMatrix2d;
-
-
     transformMatrix = identityMatrix2d;
+    fromTransformedSpace = identityMatrix2d;
+    toTransformedSpace = identityMatrix2d;
 
     constructor() {
         makeObservable(this, {
@@ -142,12 +144,13 @@ export class GameController {
                 const dragEvent = toucher.proceed?.data;
                 if (!dragEvent) return;
 
-                this.applyTransform(
-                    Matrix.multiply(
-                        getScaleToPointMatrix(dragEvent.relStartPoint, 1 + (1 - dragEvent.scale)),
-                        [1, 0, 0, 1, ...Point.scale(dragEvent.eventOffset, -1)]
-                    )
-                )
+                let m = Matrix.multiply(
+                    getScaleToPointMatrix(dragEvent.relStartPoint, 2 - dragEvent.scale),
+                    [1, 0, 0, 1, ...Point.scale(dragEvent.eventOffset, -1)]
+                );
+
+
+                this.applyTransform(m);
             }),
             autorun(() => {
                 const dragEvent = dragger.proceed?.data;
@@ -201,11 +204,31 @@ export class GameController {
     }
 
     applyTransform(m: IMatrix2d) {
-        this.transformMatrix =
+        const transformMatrix =
             Matrix.multiply(
                 this.transformMatrix,
                 m,
             );
+
+        const convMatrix = Matrix.multiply(this.pixelToField, transformMatrix);
+        const conv = (p: IPoint2) => {
+            return Matrix.apply(convMatrix, p);
+        }
+        const zero = conv([0, 0])!;
+        const one = conv([this.canvas.width, this.canvas.height]);
+
+        const dif = Point.sub(one, zero);
+        if (dif[0] < 1 || dif[1] < 1) return;
+        if (dif[0] > this.field.width * 1.1 && dif[1] > this.field.height * 1.1) return;
+        if (zero[0] > this.field.width - 1 || zero[1] > this.field.height - 1) return;
+        if (one[0] < 1 || one[1] < 1) return;
+
+        this.transformMatrix = transformMatrix;
+        this.fromTransformedSpace = Matrix.multiply(
+            this.transformMatrix,
+            this.spaceToPixel,
+        );
+        this.toTransformedSpace = Matrix.invert(this.fromTransformedSpace);
 
         this.planDraw();
     }
@@ -243,12 +266,12 @@ export class GameController {
 
 
         this.pixelToField = Matrix.translate([resolution, 0, 0, resolution, 0, 0], -halfWidthDif, -halfHeightDif);
-        this.transformMatrix = identityMatrix2d;
 
         this.planeContext = withGlContext(this.canvas.ctx, () => {
             this.program.allocateVertexes('a_position', coords, 2);
         }, this.planeContext);
 
+        this.applyTransform(identityMatrix2d);
     }
 
     planDraw = () => {
@@ -257,15 +280,9 @@ export class GameController {
     }
 
     draw = () => {
-
         const resultMatrix = Matrix.multiply(
             spaceToCNDC,
-            Matrix.invert(
-                Matrix.multiply(
-                    this.transformMatrix,
-                    this.spaceToPixel,
-                )
-            ),
+            this.toTransformedSpace,
         )
 
         const gl = this.canvas.ctx;
@@ -306,11 +323,15 @@ export function createFnStorage() {
         arr.forEach(f => f());
         arr.length = 0;
     }
+
     interface IDisposer {
         (): void,
+
         push(...fn: Function[]): void,
+
         run(): void
     }
+
     let disposer = (() => {
         run()
     }) as unknown as IDisposer;
@@ -320,3 +341,4 @@ export function createFnStorage() {
 
     return disposer;
 }
+

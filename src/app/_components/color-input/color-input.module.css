@@ -1,0 +1,18 @@
+.popover {
+    background: white;
+    border: 1px solid gray;
+    width: min-content;
+    height: min-content;
+    padding: 5px;
+}
+
+.palette {
+    user-select: none;
+    padding: 10px;
+    background: white;
+    gap: 15px;
+    width: 100%;
+    display: grid;
+    grid-template-rows: max-content 7px;
+    pointer-events: all;
+}
