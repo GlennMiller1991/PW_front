@@ -3,6 +3,12 @@ export const ENDPOINTS = {
         return '/api';
     },
 
+    // region App
+    get log() {
+        return this.base + '/log';
+    },
+    // endregion App
+
     // region Auth
     get auth() {
         return this.base + '/auth';

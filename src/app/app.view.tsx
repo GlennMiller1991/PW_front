@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {JSX, useState} from "react";
 import {AppController} from "@src/app/app.controller";
 import {observer} from "mobx-react-lite";
 import {Loader} from "@src/app/_components/opening/loader";
@@ -7,6 +7,9 @@ import {router} from "@src/infra/router";
 import {useRaceStream} from "@fbltd/async";
 import {GameWrapper} from "@src/app/game-wrapper/game.wrapper";
 import {MenuWrapper} from "@src/app/menu-wrapper/menu.wrapper";
+import {ErrorBoundary} from "@src/app/_components/error-boundary/error-boundary";
+import {RulesView} from "@src/app/rules/rules.view";
+import {AboutView} from "@src/app/about/about.view";
 
 export const cls = c;
 
@@ -19,19 +22,37 @@ export const App = observer(() => {
     if (!controller.isReady)
         return <Loader text={'PIXEL WAR'}/>;
 
-    if (!controller.isInitSuccessful)
-        return <Loader text={'ERROR'}/>
-
-
+    let content: JSX.Element;
     switch (segments[0]) {
         case '/':
-            return <MenuWrapper/>;
-
+            content = <MenuWrapper/>;
+            break;
         case '/game':
-            return <GameWrapper key={'static'}/>;
+            content = <GameWrapper key={'static'}/>;
+            break;
+
+        case '/rules':
+            content = <RulesView/>
+            break;
+
+        case '/about':
+            content = <AboutView/>
+            break;
+
+        case '/error':
+            content = <Loader text={'ERROR'}/>
+            break;
 
         default:
-            return <Loader text={'WRONG PAGE'}/>;
+            content = <Loader text={'404'}/>;
+            break;
     }
+
+    return (
+        <ErrorBoundary key={segments[0]}>
+            {content}
+        </ErrorBoundary>
+    )
 });
+
 

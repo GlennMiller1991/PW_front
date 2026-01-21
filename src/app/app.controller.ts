@@ -65,7 +65,11 @@ export class AppController {
     }
 
     setErrorIfFalsy(value: any) {
-        if (!value) this._fatalError = true;
+        if (!value) {
+            this._fatalError = true;
+            router.redirect('/error');
+        }
+
     }
 
     set isServerAccessible(value: typeof this._isServerAccessible) {

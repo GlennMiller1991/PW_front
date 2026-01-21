@@ -304,8 +304,7 @@ export class GameController {
     }
 
     goHome = () => {
-        this.transformMatrix = identityMatrix2d;
-        this.planDraw();
+        this.applyTransform(Matrix.invert(this.transformMatrix));
     }
 
     dispose() {

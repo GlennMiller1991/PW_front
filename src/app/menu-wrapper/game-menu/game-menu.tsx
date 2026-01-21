@@ -1,4 +1,4 @@
-import {observer} from "mobx-react-lite";
+    import {observer} from "mobx-react-lite";
 import styles from './game-menu.module.css';
 import {app, fonts} from "@src/app/app.controller";
 import {cls} from "@src/app/app.view";
@@ -52,16 +52,18 @@ export const GameMenu = observer(() => {
                 }
 
                 <li>
-                    <BaseButton>
-                        SETTINGS
+                    <BaseButton onClick={() => router.goto('/rules')}>
+                        RULES
                     </BaseButton>
                 </li>
 
                 <li>
-                    <BaseButton>
-                        CONTACTS
+                    <BaseButton onClick={() => router.goto('/about')}>
+                        ABOUT
                     </BaseButton>
                 </li>
+
+
 
             </ul>
 

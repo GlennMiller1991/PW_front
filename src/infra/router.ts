@@ -16,7 +16,10 @@ export class Router {
             this.history.listen(this.onLocationChange.bind(this))
         );
 
-        this.onLocationChange({action: Action.Push, location: this.history.location});
+        if (location.pathname === '/error')
+            this.redirect('/');
+        else
+            this.onLocationChange({action: Action.Push, location: this.history.location});
     }
 
     protected onLocationChange({location}: Update) {
@@ -44,6 +47,10 @@ export class Router {
 
     goto(url: string) {
         this.history.push(url);
+    }
+
+    redirect(url: string) {
+        this.history.replace(url);
     }
 
     dispose() {
