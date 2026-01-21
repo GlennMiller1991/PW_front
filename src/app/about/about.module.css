@@ -15,13 +15,12 @@
 @value linkColor: #73ecce;
 
 .container a {
-    --linkColor: #a973ec;
     text-decoration: none;
-    color: var(--linkColor);
+    color: var(--color-theme);
 }
 
 .container a:visited {
-    color: var(--linkColor);
+    color: var(--color-theme);
 }
 
 .container a:hover {

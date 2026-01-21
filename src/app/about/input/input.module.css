@@ -1,0 +1,94 @@
+.fieldContainer {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.underField {
+    height: 2px;
+    position: relative;
+    top: -1px;
+    transition: 0.5s ease;
+    width: 0;
+}
+
+.text {
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    left: 1em;
+    font-size: 0.7em;
+    font-family: "Pixelify Sans", sans-serif;
+    background-color: transparent;
+    color: #626161;
+    transition: 0.5s ease;
+    transform: translateY(-50%);
+}
+
+.field:focus {
+    border-radius: 0;
+    box-shadow: none !important;
+    border: 1px solid #31383d;
+    outline: none;
+}
+
+.input {
+    line-height: 1;
+    font-weight: 400;
+    width: 100%;
+    background-color: transparent;
+    height: 50px;
+    color: #F0F0F0;
+    transition: all 0.5s;
+    padding: 0.9em 1em;
+    box-shadow: none !important;
+    font-size: 1em;
+    font-family: "Pixelify Sans", sans-serif;
+    border: 1px solid #c5c5c5;
+
+}
+
+.field:focus + .underField {
+    background-color: var(--color-theme);
+    width: 100%;
+}
+
+.field:focus + .underField + .text {
+    color: var(--color-theme);
+    position: absolute;
+    top: 0;
+    left: 8px;
+    padding: 0 5px;
+}
+
+.focusedDiv {
+    background-color: var(--color-theme);
+    width: 100%;
+}
+
+.focusedText {
+    color: var(--color-theme);
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    padding: 0 5px;
+}
+
+.textarea {
+    overflow: auto;
+    height: 215px;
+    position: relative;
+    resize: none;
+}
+
+.textarea::-webkit-scrollbar {
+    width: 2px;
+}
+
+.textarea::-webkit-scrollbar-thumb {
+    background-color: var(--color-theme);
+    border-radius: 3px;
+}

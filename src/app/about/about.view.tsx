@@ -1,6 +1,7 @@
 import {FC, memo} from "react";
 import styles from './about.module.css';
 import {fonts} from "@src/app/app.controller";
+import {Input} from "@src/app/about/input/input";
 
 export const AboutView: FC = memo(() => {
     return (
@@ -29,6 +30,11 @@ export const AboutView: FC = memo(() => {
             <p>
                 Thanks for stopping by.
             </p>
+
+            <form style={{marginTop: '1em'}}>
+                <Input name={"Subject"}/>
+            </form>
         </div>
     );
 })
+
